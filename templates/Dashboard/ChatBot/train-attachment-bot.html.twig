@@ -1,0 +1,105 @@
+{% extends "Global/layout.html.twig" %}
+
+{% set pagetitle = 'Train Text Bot' | trans %}
+
+{% block title %}{{ pagetitle }}{% endblock %}
+
+{% block content %}
+
+    {% set navigation = [{"dashboard_index": "Dashboard"|trans,"current":(pagetitle)}] %}
+    {% include "Global/navigation.html.twig" with navigation %}
+
+    <section class="section-content padding-y bg-white">
+        <div class="{{ services.getSetting("app_layout") }}">
+            <div class="row">
+                <aside class="col-lg-3 pt-3 pt-lg-0">
+                    {% include "Dashboard/sidebar.html.twig" %}
+                </aside>
+                <div class="col-lg-9 mt-4 mt-lg-0">
+                    <form action="{{ path('chatbot_train_store',{"type":"attachment"}) }}" method="post" enctype="multipart/form-data">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center gap-5">
+                                    <h3>Train Text Bot</h3>
+                                    <button class="btn btn-info rounded">Train</button>
+                                </div>
+                                <div class="mt-5">
+                                    <div class="mb-2">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <select class="form-control" name="bot_select[]" id="bot_select">
+                                                    <option value="" disabled selected>Select A Bot</option>
+                                                    {% for bot in bots %}
+                                                        <option value="{{ bot['id'] }}">{{ bot['chatbotName'] }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="file" name="file[]" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <textarea name="text[]" cols="" rows="2" class="form-control"></textarea>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <a class="btn btn-success add-more">Add More</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event delegation on a container that always exists
+            document.body.addEventListener('click', function(event) {
+                if (event.target.classList.contains('remove-section')) {
+                    event.preventDefault();
+                    var sectionToRemove = event.target.closest('.mt-5');
+                    sectionToRemove.parentNode.removeChild(sectionToRemove);
+                }
+            });
+
+            // Add More link functionality
+            document.querySelector('.add-more').addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent the default behavior of the anchor tag
+
+                // Clone the last section
+                var lastSection = document.querySelector('.mt-5:last-of-type');
+                var newSection = lastSection.cloneNode(true);
+
+                // Remove the "Add More" link from the cloned section
+                var addMoreLink = newSection.querySelector('.add-more');
+                if (addMoreLink) {
+                    addMoreLink.remove();
+                }
+
+                // Check if a "Remove" button already exists in the cloned section
+                var removeLink = newSection.querySelector('.remove-section');
+                if (!removeLink) {
+                    // Create a "Remove" link and append it to the new section
+                    removeLink = document.createElement('a');
+                    removeLink.href = '#';
+                    removeLink.className = 'btn btn-danger remove-section mt-1';
+                    removeLink.textContent = 'Remove';
+                    newSection.querySelector('.col-md-6:last-of-type').appendChild(removeLink);
+                }
+
+                // Append the new section to the container
+                lastSection.parentNode.appendChild(newSection);
+            });
+        });
+
+    </script>
+
+{% endblock %}
