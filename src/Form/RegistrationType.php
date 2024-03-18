@@ -21,14 +21,14 @@ class RegistrationType extends AbstractType {
                     'purify_html' => true,
                     'required' => true,
                     'attr' => array(
-                        'placeholder' => 'First name'
+                        'placeholder' => 'Nombre de pila'
                     )
                 ])
                 ->add('lastname', TextType::class, [
                     'purify_html' => true,
                     'required' => true,
                     'attr' => array(
-                        'placeholder' => 'Last name'
+                        'placeholder' => 'Apellido'
                     )
                 ])
                 ->add('username', TextType::class, [
@@ -36,7 +36,7 @@ class RegistrationType extends AbstractType {
                         new Assert\NotBlank(),
                     ],
                     'attr' => array(
-                        'placeholder' => 'Username'
+                        'placeholder' => 'Nombre de usuario'
                     )
                 ])
                 ->add('email', EmailType::class, [
@@ -45,7 +45,7 @@ class RegistrationType extends AbstractType {
                         new Assert\Email(),
                     ],
                     'attr' => array(
-                        'placeholder' => 'Email'
+                        'placeholder' => 'Correo electrónico'
                     )
                 ])
                 ->add('plainPassword', RepeatedType::class, array(
@@ -54,7 +54,7 @@ class RegistrationType extends AbstractType {
                         'purify_html' => true,
                         'translation_domain' => 'FOSUserBundle',
                         'attr' => array(
-                            'placeholder' => 'Password',
+                            'placeholder' => 'Contraseña',
                             'autocomplete' => 'new-password',
                         ),
                     ),

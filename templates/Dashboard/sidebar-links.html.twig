@@ -237,12 +237,14 @@
         <ul id="account-submenu-chatbot" class="nav flex-column ml-3 collapse show">
             <li class="nav-item">
                 <a href="{{ path('chatbot_train',{'type':'text'}) }}" class="nav-link {% if routename == "fos_user_change_password" %}active{% endif %}">
+                <i class="fas fa-text-width"></i>
                     Train By Text
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{{ path('chatbot_train',{'type':'attachment'})  }}" class="nav-link {% if routename == "fos_user_change_password" %}active{% endif %}">
+                <i class="fas fa-file"></i>
                     Train By Attachment
                 </a>
             </li>
