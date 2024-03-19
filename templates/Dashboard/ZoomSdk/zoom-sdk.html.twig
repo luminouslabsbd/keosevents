@@ -1,0 +1,159 @@
+{% extends "Global/layout.html.twig" %}
+
+{% set pagetitle = 'Zoom SDK' | trans %}
+
+{% block title %}{{ pagetitle }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        html,
+        body {
+            min-width: 0 !important;
+            font-size: 13px !important;
+        }
+
+        #zmmtg-root {
+            display: none;
+            min-width: 0 !important;
+        }
+
+        .main {
+            width: 70%;
+            margin: auto;
+            text-align: center;
+        }
+
+        .join-button {
+            margin-top: 20px;
+            background-color: #2D8CFF;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 40px;
+            display: inline-block;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .join-button:hover {
+            background-color: #2681F2;
+        }
+        .section-pagetop{
+            padding:2px 0 !important;
+        }
+        .breadcrumb{
+            padding: 0 15px !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    {% set navigation = [{"dashboard_index": "Dashboard"|trans,"current":(pagetitle)}] %}
+    {% include "Global/navigation.html.twig" with navigation %}
+
+    <section class="section-content padding-y bg-white">
+        <div class="{{ services.getSetting("app_layout") }}">
+            <div class="row">
+                <div class="col-lg-12 mt-4 mt-lg-0">
+                    <div class="card shadow padding-bottom-lg">
+                        <div class="main">
+                            <h1>Zoom Meeting SDK</h1>
+
+                            <!-- For Component View -->
+                            <div id="meetingSDKElement">
+                                <!-- Zoom Meeting SDK Rendered Here -->
+                            </div>
+
+                            <button class="join-button" onClick="getSignature()">Join Meeting</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dependencies for client view and component view -->
+    <script src="https://source.zoom.us/3.1.6/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.1.6/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.1.6/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.1.6/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.1.6/lib/vendor/lodash.min.js"></script>
+
+    <!-- For Client View -->
+    <script src="https://source.zoom.us/zoom-meeting-3.1.6.min.js"></script>
+    <script>
+        ZoomMtg.preLoadWasm()
+        ZoomMtg.prepareWebSDK()
+
+        var authEndpoint = 'https://zoomsdk-sign-generator-express.onrender.com'
+        var sdkKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+        var meetingNumber = '88454268917'
+        var passWord = '8h1C4S'
+        var role = 0
+        var userName = 'JavaScript'
+        var userEmail = 'mailto:sajjad.cse35@gmail.com'
+        var registrantToken = ''
+        var zakToken = ''
+        var leaveUrl = 'https://zoom.us'
+
+        function getSignature() {
+            fetch(authEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    meetingNumber: meetingNumber,
+                    role: role
+                })
+            }).then((response) => {
+                return response.json()
+            }).then((data) => {
+                // console.log(data)
+                startMeeting(data.signature)
+            }).catch((error) => {
+                // alert('SDK key Not Valid')
+                console.log(error)
+            })
+        }
+
+        function startMeeting(signature) {
+
+            document.getElementById('zmmtg-root').style.display = 'block'
+
+            ZoomMtg.init({
+                leaveUrl: leaveUrl,
+                patchJsMedia: true,
+                success: (success) => {
+                    console.log(success)
+                    ZoomMtg.join({
+                        signature: signature,
+                        sdkKey: sdkKey,
+                        meetingNumber: meetingNumber,
+                        passWord: passWord,
+                        userName: userName,
+                        userEmail: userEmail,
+                        // tk: registrantToken,
+                        // zak: zakToken,
+                        success: (success) => {
+                            console.log(success)
+                        },
+                        error: (error) => {
+                            console.log(error)
+                        },
+                    })
+                },
+                error: (error) => {
+                    console.log(error)
+                }
+            })
+        }
+    </script>
+
+    <!-- For Component View -->
+    <!-- <script src="https://source.zoom.us/3.1.6/zoom-meeting-embedded-3.1.6.min.js"></script>
+    <script type="text/javascript" src="component-view.js"></script> -->
+
+{% endblock %}

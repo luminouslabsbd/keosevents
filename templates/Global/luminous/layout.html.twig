@@ -8,6 +8,7 @@
     <title>{% block title %}{% endblock %} | {{ services.getSetting("website_name") }}</title>
 
     <head>
+        <link rel="shortcut icon" href="{{ absolute_url(asset(services.getAppLayoutSettings.getFaviconPath)) }}" />
         <link rel="stylesheet" href="{{ asset('assets/ll_assets/assets/css/all.min.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/ll_assets/assets/css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/ll_assets/assets/css/owl.carousel.min.css') }}">

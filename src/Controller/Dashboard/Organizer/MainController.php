@@ -14,7 +14,6 @@ class MainController extends Controller {
      * @Route(name="index")
      */
     public function index(AppServices $services, TranslatorInterface $translator) {
-
         // Tickets Sales By Date Line Chart
         $datefrom = date_format(new \DateTime, "Y-m-01");
         $dateto = date_format(new \DateTime, "Y-m-t");
