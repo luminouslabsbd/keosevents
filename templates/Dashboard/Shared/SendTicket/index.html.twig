@@ -105,7 +105,7 @@
                                         <button type="button" class="btn btn-sm btn-info mb-2 view-ticket" data-toggle="modal" data-target="#ticketModal_{{ ticket.id }}">{{ "View"|trans({}, "messages", locale) }}</button>
 
                                         <div>
-                                            <a href="{{ path('mail_server_test', {'id': '79c9bb8a46' }) }}" class="btn btn-sm btn-primary">Send</a>
+                                            <a href="{{ path('mail_server_test', {'id': ticket.reference }) }}" class="btn btn-sm btn-primary">Send</a>
                                         </div>
 
                                         <!-- Modal -->
@@ -145,6 +145,8 @@
                                                                             {{ orderElement.eventticket.eventdate.venue.translate(locale).name }}
                                                                         {% else %}
                                                                             {{ "Online"|trans({}, "messages", locale) }}
+                                                                            <br>
+                                                                            {{ "https://zoom.us/"|trans({}, "messages", locale) }}
                                                                         {% endif %}
                                                                     </h6>
                                                                     {% if orderElement.eventticket.eventdate.event.organizer %}
