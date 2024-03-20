@@ -231,6 +231,12 @@
     </li>
 
     <li class="nav-item">
+        <a href="{{ path('send_tickets') }}" class="nav-link {% if routename == "dashboard_organizer_venue" or routename == "dashboard_organizer_venue_add" or routename == "dashboard_organizer_venue_edit" %}active{% endif %}">
+            <i class="fas fa-map-marker-alt fa-fw"></i> {{'Send Mail'|trans}}
+        </a>
+    </li>
+
+    <li class="nav-item">
         <a href="#account-submenu-chatbot" data-toggle="collapse" data-parent="#dashboard-menu" class="nav-link dropdown-toggle">
             <i class="fas fa-user-cog fa-fw"></i> Chatbot
         </a>

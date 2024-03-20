@@ -1,0 +1,231 @@
+{% extends "Global/layout.html.twig" %}
+
+{% if is_granted('ROLE_ADMINISTRATOR') %}
+    {% set pagetitle = 'Manage venues' | trans %}
+{% else %}
+    {% set pagetitle = 'My venues' | trans %}
+{% endif %}
+
+{% block title %}{{ pagetitle }}{% endblock %}
+
+{% if app.request.locale == "ar" %}
+    {% set locale = "en" %}
+{% else %}
+    {% set locale = app.request.locale %}
+{% endif %}
+
+{% block stylesheets %}
+    <style>
+
+        *{ font-family: DejaVu Sans !important;}
+
+        table.bordered, table.bordered th, table.bordered td {
+            padding: 10px;
+            border: 1px solid #eee;
+            border-collapse: collapse;
+        }
+        table tr {
+            vertical-align: top;
+        }
+        table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align:right;
+        }
+        .tickets-container .ticket-wrapper {
+            page-break-inside: avoid;
+        }
+        .tickets-container .ticket-wrapper:not(:last-child) {
+            page-break-after: always;
+        }
+        .tickets-container .ticket-wrapper:not(:first-child) {
+            page-break-before: always;
+        }
+        .text-muted {
+            color: #777;
+        }
+        .footer {
+            position:absolute;
+            bottom:0;
+            width: 100%;
+        }
+        .scanned-ticket-stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .qr-barcode-wrapper > div {
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    {% set navigation = [{ "dashboard_index": ('Dashboard' | trans), "current":(pagetitle) }] %}
+    {% include "Global/navigation.html.twig" with navigation %}
+
+    <section class="section-content padding-y bg-white">
+        <div class="{{ services.getSetting("app_layout") }}">
+            <div class="row">
+                <aside class="col-lg-3 pt-3 pt-lg-0">
+                    {% include "Dashboard/sidebar.html.twig" %}
+                </aside>
+                <div class="tickets-container col-lg-9">
+                    <table class="table bordered">
+                        <thead>
+                        <tr>
+                            <th>{{ "Buyer Name"|trans({}, "messages", locale) }}</th>
+                            <th>{{ "Order ID"|trans({}, "messages", locale) }}</th>
+                            <th>{{ "Ticket ID"|trans({}, "messages", locale) }}</th>
+                            <th>{{ "Actions"|trans({}, "messages", locale) }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference) and (is_granted("ROLE_ADMINISTRATOR") or is_granted("ROLE_ATTENDEE") or (is_granted("ROLE_ORGANIZER") and orderElement.belongsToOrganizer(app.user.organizer.slug)) or (is_granted("ROLE_POINTOFSALE") and orderElement.belongsToOrganizer(app.user.pointofsale.organizer.slug))) %}
+                            {% for ticket in orderElement.tickets %}
+                                <tr>
+                                    <td>{{ order.user.getCrossRoleName }}
+                                        {% if order.user.hasRole("ROLE_POINTOFSALE") and order.payment.firstname and order.payment.lastname %}
+                                            ({{ order.payment.firstname ~ " " ~ order.payment.lastname }})
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.reference }}</td>
+                                    <td>{{ ticket.reference }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-info mb-2 view-ticket" data-toggle="modal" data-target="#ticketModal_{{ ticket.id }}">{{ "View"|trans({}, "messages", locale) }}</button>
+
+                                        <div>
+                                            <a href="{{ path('mail_server_test', {'id': '79c9bb8a46' }) }}" class="btn btn-sm btn-primary">Send</a>
+                                        </div>
+
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="ticketModal_{{ ticket.id }}" tabindex="-1" role="dialog" aria-labelledby="ticketModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="ticketModalLabel">{{ "Ticket Details"|trans({}, "messages", locale) }}</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <!-- Put your ticket details here -->
+                                                        <table width="100%" class="bordered">
+                                                            <tbody>
+                                                            <tr style="background-color: {{ services.getSetting("primary_color") }}; color: #fff;">
+                                                                <td width="50%">
+                                                                    <h5>{{ "Order"|trans({}, "messages", locale) }} #{{ order.reference }}</h3>
+                                                                </td>
+                                                                <td width="50%">
+                                                                    <h5>{{ "Ticket"|trans({}, "messages", locale) }} #{{ ticket.reference }}</h3>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td width="50%">
+                                                                    <h3>{{ orderElement.eventticket.eventdate.event.translate(locale).name }}</h3>
+                                                                    {% if orderElement.eventticket.eventdate.startdate %}
+                                                                        <h6><span class="text-muted">{{ "Start date"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.startdate|localizeddate('none', 'none', locale, date_timezone, date_format) }}</h6>
+                                                                    {% endif %}
+                                                                    {% if orderElement.eventticket.eventdate.enddate %}
+                                                                        <h6><span class="text-muted">{{ "End date"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.enddate|localizeddate('none', 'none', locale, date_timezone, date_format) }}</h6>
+                                                                    {% endif %}
+                                                                    <h6>
+                                                                        <span class="text-muted">{{ "Venue / Location"|trans({}, "messages", locale) }}</span><br>
+                                                                        {% if orderElement.eventticket.eventdate.venue %}
+                                                                            {{ orderElement.eventticket.eventdate.venue.translate(locale).name }}
+                                                                        {% else %}
+                                                                            {{ "Online"|trans({}, "messages", locale) }}
+                                                                        {% endif %}
+                                                                    </h6>
+                                                                    {% if orderElement.eventticket.eventdate.event.organizer %}
+                                                                        <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td width="50%">
+                                                                    <h3>
+                                                                        {{ order.user.getCrossRoleName }}
+                                                                        {% if order.user.hasRole("ROLE_POINTOFSALE") and order.payment.firstname and order.payment.lastname %}
+                                                                            ({{ order.payment.firstname ~ " " ~ order.payment.lastname }})
+                                                                        {% endif %}
+                                                                    </h3>
+                                                                    <h6><span class="text-muted">{{ "Ticket type"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.name }}</h6>
+                                                                    <h6><span class="text-muted">{{ "Ticket price"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.free ? "Free"|trans({}, "messages", locale) : ((services.getSetting('currency_position') == 'left' ? services.getSetting('currency_symbol') : '') ~ orderElement.displayUnitPrice() ~ (services.getSetting('currency_position') == 'right' ? services.getSetting('currency_symbol') : '')) }}</h6>
+                                                                    {% if order.getOrderElementsPriceSum(true) > 0 %}
+                                                                        <h6><span class="text-muted">{{ "Payment method"|trans({}, "messages", locale) }}</span><br>{{ order.paymentgateway.name }}</h6>
+                                                                    {% endif %}
+                                                                    <h6><span class="text-muted">{{ "Order date"|trans({}, "messages", locale) }}</span><br>
+                                                                        {% if order.payment.details["TIMESTAMP"] is defined %}
+                                                                            {{ order.payment.details["TIMESTAMP"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                                                        {% elseif order.payment.details["created"] is defined %}
+                                                                            {{ order.payment.details["created"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                                                        {% else %}
+                                                                            {{ order.payment.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                                                        {% endif %}
+                                                                    </h6>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="text-center" colspan="2">
+                                                                    <div class="qr-barcode-wrapper">
+                                                                        {{ barcode({code: ticket.reference, type: 'qrcode', format: 'html'}) }}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% if ticket.scanned %}
+                                                                <tr>
+                                                                    <td class="text-center" colspan="2">
+                                                                        <br><br>
+                                                                        <img src=".{{ asset('assets/img/scanned-ticket-stamp.png') }}" height="150" />
+
+                                                                        <p class="text-center text-muted">{{ "This ticket was scanned at %scanDate%"|trans({"%scanDate%": ticket.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format)}, "messages", locale) }}</p>
+                                                                    </td>
+                                                                </tr>
+                                                            {% endif %}
+                                                            </tbody>
+                                                        </table>
+                                                        <!-- Add more ticket details as needed -->
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ "Close"|trans({}, "messages", locale) }}</button>
+                                                        <!-- Add more buttons or actions as needed -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block javascripts %}
+
+    <script>
+
+        $(document).ready(function () {
+            if (getURLParameter('directory') != "null") {
+                $('input[type="radio"][name="directory"][value="' + getURLParameter('directory') + '"]').attr("checked", "checked");
+            }
+        });
+
+    </script>
+
+{% endblock %}
