@@ -55,6 +55,14 @@ class EventDateType extends AbstractType {
                     'html5' => false,
                     'attr' => ['class' => 'datetimepicker']
                 ])
+                // ->add('New', ChoiceType::class, [
+                //     'multiple' => false,
+                //     'expanded' => true,
+                //     'label' => false,
+                //     'choices' => ['Whatsapp' => false, 'Zoom' => true, 'Teams' => 2],
+                //     'attr' => ['class' => 'is-new-component'],
+                //     'label_attr' => ['class' => 'radio-custom radio-inline']
+                // ])
                 ->add('online', ChoiceType::class, [
                     'required' => true,
                     'multiple' => false,

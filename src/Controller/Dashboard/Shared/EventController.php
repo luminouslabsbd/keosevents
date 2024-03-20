@@ -48,6 +48,7 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/{slug}/edit", name="dashboard_organizer_event_edit", methods="GET|POST")
      */
     public function addedit(Request $request, AppServices $services, TranslatorInterface $translator, $slug = null, AuthorizationCheckerInterface $authChecker, EntityManagerInterface $entityManager) {
+   
         $em = $this->getDoctrine()->getManager();
 
         $organizer = "all";
@@ -70,14 +71,12 @@ class EventController extends Controller {
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-
             if ($form->isValid()) {
 
                 // event_mails table save data
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
-                $this->event_mails_data_save($input, $file, $entityManager);
-
+                
                 foreach ($event->getImages() as $image) {
                     $image->setEvent($event);
                 }
@@ -94,6 +93,7 @@ class EventController extends Controller {
                     }
                 }
                 if (!$slug) {
+                    $this->event_mails_data_save($event->getReference(),$input, $file, $entityManager);
                     $event->setOrganizer($this->getUser()->getOrganizer());
                     $event->setReference($services->generateReference(10));
                     $this->addFlash('success', $translator->trans('The event has been successfully created'));
@@ -129,7 +129,7 @@ class EventController extends Controller {
     }
 
 
-    public function event_mails_data_save($input, $file, $entityManager)
+    public function event_mails_data_save($event_ref_id,$input, $file, $entityManager)
     {
         if ($file['error'] === UPLOAD_ERR_OK) {
             $tmpFilePath = $file['tmp_name'];
@@ -155,20 +155,21 @@ class EventController extends Controller {
                     $data['country'];
                     $data['address'];
 
-                    $sql = "INSERT INTO event_mails (send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
-                    VALUES (:send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
+                    $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
+                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
                     $params = [
-                        'send_type' => $send_type,
-                        'send_chanel' => $send_chanel,
+                        'event_ref_id'       => $event_ref_id,
+                        'send_type'          => $send_type,
+                        'send_chanel'        => $send_chanel,
                         'subscriber_list_id' => $subscriber_list_id,
-                        'name' => $data['name'],
-                        'surname' => $data['surname'],
-                        'email' => $data['email'],
-                        'phone_number' => $data['phone_number'],
-                        'department' => $data['department'],
-                        'city' => $data['city'],
-                        'country' => $data['country'],
-                        'address' => $data['address'],
+                        'name'               => $data['name'],
+                        'surname'            => $data['surname'],
+                        'email'              => $data['email'],
+                        'phone_number'       => $data['phone_number'],
+                        'department'         => $data['department'],
+                        'city'               => $data['city'],
+                        'country'            => $data['country'],
+                        'address'            => $data['address'],
                     ];
 
                     $statement = $entityManager->getConnection()->prepare($sql);
