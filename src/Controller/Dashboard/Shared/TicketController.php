@@ -16,13 +16,51 @@ use Doctrine\DBAL\Connection;
 class TicketController extends Controller
 {
     /**
-     * @Route("/send-tickets", name="send_tickets", methods="GET")
      * @Route("/send-ticket_mail", name="send_ticket_mail", methods="POST")
      */
-    public function sendTicket(Request $request, AppServices $services, TranslatorInterface $translator)
+    public function sendTicket(Request $request, AppServices $services, TranslatorInterface $translator,Connection $connection,$event = null)
     {
-        $order = $services->getOrders(array("reference" => "6278336244769b3"))->getQuery()->getOneOrNullResult();
-//        dd($order,$order->getOrderelements());
+        $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
+        $params = ['id' => $event];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $event_date = $statement->fetch();
+
+        $event_date_id = $event_date['id'];
+
+        $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
+        $params2 = ['id' => $event_date_id];
+        $statement2 = $connection->prepare($sql2);
+        $statement2->execute($params2);
+        $event_date_ticket = $statement2->fetch();
+
+        $event_date_ticket_id = $event_date_ticket['id'];
+
+        $sql3 = "SELECT * FROM eventic_order_element WHERE eventticket_id = :id";
+        $params3 = ['id' => $event_date_ticket_id];
+        $statement3 = $connection->prepare($sql3);
+        $statement3->execute($params3);
+        $event_orders = $statement3->fetchAll();
+
+        if (!empty($event_orders)) {
+            foreach ($event_orders as $event_order) {
+                $event_order_id = $event_order['order_id'];
+
+                $sql_order = "SELECT * FROM eventic_order WHERE id = :order_id";
+                $params_order = ['order_id' => $event_order_id];
+                $statement_order = $connection->prepare($sql_order);
+                $statement_order->execute($params_order);
+                $order_data = $statement_order->fetch();
+                if (isset($order_data['reference'])) {
+                    $references[] = $order_data['reference'];
+                }
+            }
+        }
+
+        foreach ($references as $reference) {
+            $order[] = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
+        }
+
         if (!$order) {
             $this->addFlash('error', $translator->trans('The order can not be found'));
             return $this->redirectToRoute("dashboard_attendee_orders");
@@ -30,7 +68,7 @@ class TicketController extends Controller
         $eventDateTicketReference = $request->query->get('event', 'all');
 
         return $this->render('Dashboard/Shared/SendTicket/index.html.twig',[
-            'order' => $order,
+            'orders' => $order,
             'eventDateTicketReference' => $eventDateTicketReference,
         ]);
     }
@@ -99,6 +137,6 @@ class TicketController extends Controller
         } catch (\Exception $e) {
             $this->addFlash('danger', $translator->trans("The email could not be sent"));
         }
-        return $this->redirectToRoute('send_tickets');
+        return $this->redirect($request->headers->get('referer'));
     }
 }

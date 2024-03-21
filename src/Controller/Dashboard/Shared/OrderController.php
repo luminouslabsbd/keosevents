@@ -114,7 +114,7 @@ class OrderController extends Controller {
                 $payment->setOrder($order);
                 $payment->setNumber($services->generateReference(20));
                 $payment->setCurrencyCode($services->getSetting("currency_ccy"));
-                $payment->setTotalAmount($orderamount); // 1.23 USD = 123
+                $payment->setTotalAmount("100"); // 1.23 USD = 123
                 $payment->setDescription($translator->trans("Payment of tickets purchased on %website_name%", array('%website_name%' => $services->getSetting("website_name"))));
                 $payment->setClientId($this->getUser()->getId());
                 if ($form->getData()['firstname'] != null && $form->getData()['firstname'] != "") {

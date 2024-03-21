@@ -80,6 +80,7 @@
                                     <a href="{{ path('dashboard_organizer_event_edit', { slug : event.slug }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-edit fa-fw text-muted"></i> {{ "Edit"|trans }}</a>
                                     <a href="{{ path('dashboard_organizer_orders', { event : event.slug, status: 1 }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-users fa-fw text-muted"></i> {{ "Attendees"|trans }}</a>
                                     <a href="{{ path('dashboard_organizer_reviews', { event : event.slug }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-star fa-fw text-muted"></i> {{ "Reviews"|trans }} </a>
+                                    <a href="{{ path('send_tickets', { event : event.id }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-star fa-fw text-muted"></i> {{ "Send Tickets"|trans }} </a>
                                     {% if event.published %}
                                         <a href="{{ path('dashboard_organizer_event_draft', { slug : event.slug }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-eye-slash fa-fw text-muted"></i> {{ "Draft"|trans }}</a>
                                     {% else %}
