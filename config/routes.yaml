@@ -189,3 +189,8 @@ send_tickets:
     path: /send_tickets/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicket'
     methods: ['GET']
+
+send_ticket_csv:
+    path: /send_ticket_csv/{event?}
+    controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicketCsv'
+    methods: [ 'GET' ]

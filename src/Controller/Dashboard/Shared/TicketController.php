@@ -15,9 +15,6 @@ use Doctrine\DBAL\Connection;
 
 class TicketController extends Controller
 {
-    /**
-     * @Route("/send-ticket_mail", name="send_ticket_mail", methods="POST")
-     */
     public function sendTicket(Request $request, AppServices $services, TranslatorInterface $translator,Connection $connection,$event = null)
     {
         $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
@@ -136,6 +133,41 @@ class TicketController extends Controller
             }
         } catch (\Exception $e) {
             $this->addFlash('danger', $translator->trans("The email could not be sent"));
+        }
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    public function sendTicketCsv(Request $request,AppServices $services, TranslatorInterface $translator, Connection $connection, Swift_Mailer $mailer, Environment $templating, $event = null)
+    {
+        $sql = "SELECT * FROM eventic_event WHERE id = :id";
+        $params = ['id' => $event];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $event = $statement->fetch();
+        $ref_id = $event['reference'];
+
+        $sql = "SELECT * FROM event_mails WHERE event_ref_id = :ref_id";
+        $params = ['ref_id' => $ref_id];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $eventMails = $statement->fetchAll();
+
+        foreach ($eventMails as $eventMail) {
+            $email = (new \Swift_Message($translator->trans("Ticket Mail server test email")))
+                ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
+                ->setTo($eventMail['email'])
+                ->setBody($templating->render('Dashboard/Shared/SendTicket/eventTicketForCsv.html.twig'), 'text/html');
+
+            try {
+                $result = $mailer->send($email);
+                if ($result == 0) {
+                    $this->addFlash('danger', $translator->trans("The email could not be sent"));
+                } else {
+                    $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $eventMail['email']);
+                }
+            } catch (\Exception $e) {
+                $this->addFlash('danger', $translator->trans("The email could not be sent"));
+            }
         }
         return $this->redirect($request->headers->get('referer'));
     }
