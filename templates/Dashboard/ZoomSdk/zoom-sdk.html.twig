@@ -236,17 +236,14 @@
                 secure: true,
         })
         socket.on("quiz_start", function(response) {
-            console.log(response);
             $('#quiz_start_modal').modal('show');
         });
 
         socket.on("show_result", function(response) {
-            console.log(response);
             $('#show_result_modal').modal('show');
         });
         
         socket.on("show_winner", function(response) {
-            console.log(response);
             $('#show_winner_modal').modal('show');
         });
 
