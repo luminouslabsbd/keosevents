@@ -185,6 +185,7 @@ zoom_sdk_player:
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
 
+
 send_tickets:
     path: /send_tickets/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicket'
@@ -194,3 +195,14 @@ send_ticket_csv:
     path: /send_ticket_csv/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicketCsv'
     methods: [ 'GET' ]
+
+quiz_setting:
+    path: /quiz/setting/
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::quizSetting'
+    methods: ['GET']
+
+start_quiz:
+    path: /start/quiz/{quiz}
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::startQuiz'
+    methods: ['GET']
+
