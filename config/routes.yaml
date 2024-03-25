@@ -184,3 +184,13 @@ zoom_sdk_player:
     path: /zoom_sdk_player/
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
+
+quiz_setting:
+    path: /quiz/setting/
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::quizSetting'
+    methods: ['GET']
+
+start_quiz:
+    path: /start/quiz/{quiz}
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::startQuiz'
+    methods: ['GET']

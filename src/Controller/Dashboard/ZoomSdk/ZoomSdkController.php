@@ -8,10 +8,9 @@ class ZoomSdkController extends Controller
 {
   public function zoomSdkPlayer()
   {
-    try {
-      return $this->render('Dashboard/ZoomSdk/zoom-sdk.html.twig');
-    } catch (\Exception $exception) {
-      dd($exception);
-    }
+      return $this->render('Dashboard/ZoomSdk/zoom-sdk.html.twig',[
+        'nodeServer' => $_ENV['NODE_SERVER']
+      ]);
+
   }
 }

@@ -38,5 +38,6 @@ yarn-error.log
 ###< phpunit/phpunit ###
 
 /sessions/*
-.env
+/.env
+*.zip
 
