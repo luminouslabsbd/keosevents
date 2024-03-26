@@ -180,6 +180,11 @@ chatbot_train_store:
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::createChatBotTrainStore'
     methods: ['POST']
 
+# trainBot:
+#     path: /trainBot/
+#     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::trainBot'
+#     methods: ['POST']
+
 zoom_sdk_player:
     path: /zoom_sdk_player/
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'

@@ -22,7 +22,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center gap-5">
                                     <h3>Train Text Bot</h3>
-                                    <button class="btn btn-info rounded">Train</button>
+                                    <button type="submit" class="btn btn-info rounded">Train</button>
                                 </div>
                                 <div class="mt-5">
                                     <div class="mb-2">
@@ -40,28 +40,28 @@
                                 </div>
                             </div>
                         </div>
-                    </form>
-                   
+                    </form> 
                 </div>
             </div>
         </div>
     </section>
 
+
+    {% if app.session.has('chatbotId') %}
+        {% set myData = app.session.get('chatbotId') %}
+        {% do app.session.remove('chatbotId') %}
+
+        <script type="module">
+            import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js";
+            Chatbot.init({
+                chatflowid: "{{ myData | escape('js') }}",
+                apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
+            });
+        </script>
+    {% endif %}
+
+
 {% endblock %}
 
 {% block javascripts %}
-    <script type="module">
-    
-        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js";
-        $(document).on('change','#bot_select', function(){
-            var chat_id = $(this).val();
-            Chatbot.init({
-                chatflowid: `${chat_id}`,
-                apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
-            })
-        })
-
-        
-        
-    </script>
 {% endblock %}
