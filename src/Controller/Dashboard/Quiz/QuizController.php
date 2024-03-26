@@ -19,7 +19,7 @@ class QuizController extends Controller
   public function startQuiz(Request $request)
   {
     $nodeServer = $_ENV['NODE_SERVER'];
-    $url = $nodeServer.'/new-order-data';
+    $url = $nodeServer. 'new-message-emit';
 
     $params = $request->get('quiz');
     if("start" == $params){
