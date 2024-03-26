@@ -27,7 +27,7 @@ class ChatBotController extends Controller
         } catch (\Exception $exception) {
             
         }
-
+    
         if ($type === "text") {
             return $this->render('Dashboard/ChatBot/train-text-bot.html.twig', [
                 'bots' => $bots,
