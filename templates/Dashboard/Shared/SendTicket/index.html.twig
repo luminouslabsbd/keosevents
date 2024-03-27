@@ -145,7 +145,7 @@
                                                                             {% else %}
                                                                                 {{ "Online"|trans({}, "messages", locale) }}
                                                                                 <br>
-                                                                                {{ "https://zoom.us/"|trans({}, "messages", locale) }}
+                                                                                {{ link |trans({}, "messages", locale) }}
                                                                             {% endif %}
                                                                         </h6>
                                                                         {% if orderElement.eventticket.eventdate.event.organizer %}
