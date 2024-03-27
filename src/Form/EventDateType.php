@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\EventDate;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -82,6 +83,14 @@ class EventDateType extends AbstractType {
                         return $this->services->getVenues(array("organizer" => $this->user->getOrganizer()->getSlug()));
                     },
                 ])
+
+                ->add('add_link', TextType::class, [
+                    'purify_html' => true,
+                    'required' => false,
+                    'attr' => ['class' => 'add_link'],
+                    'label' => 'Add Link',
+                ])
+
                 ->add('scanners', EntityType::class, [
                     'required' => false,
                     'multiple' => true,
