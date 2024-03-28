@@ -16,6 +16,7 @@
                     {% include "Dashboard/sidebar.html.twig" %}
                 </aside>
                 <div class="col-lg-9 mt-4 mt-lg-0">
+
                     <form action="{{ path('chatbot_train_store',{"type":"attachment"}) }}" method="post" enctype="multipart/form-data">
                         <div class="card shadow">
                             <div class="card-body">
