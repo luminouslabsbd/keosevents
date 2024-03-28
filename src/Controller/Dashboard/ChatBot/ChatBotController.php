@@ -11,15 +11,30 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Stream;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ChatBotController extends Controller
 {
 
     private $client;
-    public function __construct(HttpClientInterface $client)
+    private $security;
+    public function __construct(HttpClientInterface $client, Security $security)
     {
+        // $this->authCheckWithRole($security);
         $this->client = $client;
     }
+
+    // private function authCheckWithRole($security){
+    //     $user = $security->getUser();
+    //     if ($user) {
+    //         $username = $user->getUsername();
+    //         dd($username);
+    //     }else{
+    //         return $this->redirectToRoute('ll_signin');
+    //     }
+    // }
 
     public function createChatBotTrain($type)
     {
