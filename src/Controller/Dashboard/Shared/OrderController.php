@@ -21,6 +21,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Component\HttpFoundation\UrlHelper;
 use Symfony\Component\Asset\Packages;
+use Doctrine\DBAL\Connection;
 
 class OrderController extends Controller {
 
@@ -619,7 +620,7 @@ class OrderController extends Controller {
     /**
      * @Route("/print-tickets/{reference}", name="dashboard_tickets_print")
      */
-    public function printTickets($reference, Request $request, TranslatorInterface $translator, AppServices $services, UrlHelper $urlHelper, Packages $assetsManager) {
+    public function printTickets($reference, Request $request, TranslatorInterface $translator, AppServices $services,Connection $connection, UrlHelper $urlHelper, Packages $assetsManager) {
 
         $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
         if (!$order) {
@@ -633,12 +634,67 @@ class OrderController extends Controller {
 
         $eventDateTicketReference = $request->query->get('event', 'all');
 
+
+    $sqlEvent = "SELECT * FROM eventic_order WHERE reference = :ref_id";
+    $paramsEvent = ['ref_id' => $reference];
+    $statementEvent = $connection->prepare($sqlEvent);
+    $statementEvent->execute($paramsEvent);
+    $event_order = $statementEvent->fetch();
+
+    if (!$event_order) {
+        $this->addFlash('error', $translator->trans('The event order can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    $event_order_id = $event_order['id'];
+
+    $sql = "SELECT * FROM eventic_order_element WHERE order_id = :order_id";
+    $params = ['order_id' => $event_order_id];
+    $statement = $connection->prepare($sql);
+    $statement->execute($params);
+    $event_order_ele = $statement->fetch();
+
+
+    if (!$event_order_ele) {
+        $this->addFlash('error', $translator->trans('The event order element date can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    $event_ticket_id = $event_order_ele['eventticket_id'];
+
+    $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE id = :ticket_id";
+    $params2 = ['ticket_id' => $event_ticket_id];
+    $statement2 = $connection->prepare($sql2);
+    $statement2->execute($params2);
+    $event_date_ticket = $statement2->fetch();
+
+    if (!$event_date_ticket) {
+        $this->addFlash('error', $translator->trans('The event ticket can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    $event_date_id = $event_date_ticket['eventdate_id'];
+
+    $sql3 = "SELECT * FROM eventic_event_date WHERE id = :date_id";
+    $params3 = ['date_id' => $event_date_id];
+    $statement3 = $connection->prepare($sql3);
+    $statement3->execute($params3);
+    $event_date = $statement3->fetch();
+
+    if (!$event_date) {
+        $this->addFlash('error', $translator->trans('The event date can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }else{
+        $link = $event_date['meetinglink'];
+    }
+
         $pdfOptions = new Options();
 //$pdfOptions->set('defaultFont', 'Arial');
         $dompdf = new Dompdf($pdfOptions);
         $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
             'order' => $order,
             'eventDateTicketReference' => $eventDateTicketReference,
+            'link' => $link,
         ]);
 
         $dompdf->loadHtml($html);

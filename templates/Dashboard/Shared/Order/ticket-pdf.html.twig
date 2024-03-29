@@ -113,9 +113,12 @@
                                             {% else %}
                                                 {{ "Online"|trans({}, "messages", locale) }}
                                                 <br>
-                                                {{ "https://zoom.us/"|trans({}, "messages", locale) }}
+                                                {{ link |trans({}, "messages", locale) }}
                                             {% endif %}
                                         </h6>
+                                        {% if not orderElement.eventticket.eventdate.venue %}
+                                            <a href="https://{{ link }}" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
+                                        {% endif %}
                                         {% if orderElement.eventticket.eventdate.event.organizer %}
                                             <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
                                             {% endif %}
