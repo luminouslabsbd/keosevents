@@ -9,7 +9,8 @@ class ZoomSdkController extends Controller
   public function zoomSdkPlayer()
   {
       return $this->render('Dashboard/ZoomSdk/zoom-sdk.html.twig',[
-        'nodeServer' => $_ENV['NODE_SERVER']
+        'nodeServer' => $_ENV['NODE_SERVER'],
+        'quizApiUrl' => $_ENV['QUIZ_API']
       ]);
 
   }
