@@ -26,7 +26,8 @@
                                 </div>
                                 <div class="mt-5">
                                     <div class="mb-2">
-                                        <select class="form-control" name="bot_id" id="bot_select">
+                                        <label>Chatbot</label>
+                                        <select class="form-control" name="bot_id" id="bot_select" required>
                                             <option value="" disabled selected>Select A Bot</option>
                                             {% for bot in bots %}
                                                 <option value="{{  bot['id'] }}">{{  bot['name'] }}</option>
@@ -35,7 +36,8 @@
                                     </div>
 
                                     <div class="mb-2">
-                                        <textarea name="bot_text" cols="" rows="10" class="form-control"></textarea>
+                                         <label>Description</label>
+                                        <textarea name="bot_text" cols="" rows="10" class="form-control" placeholder="Write text for train your chatbot"></textarea>
                                     </div>
                                 </div>
                             </div>

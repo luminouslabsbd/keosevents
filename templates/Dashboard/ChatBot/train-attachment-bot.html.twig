@@ -4,6 +4,23 @@
 
 {% block title %}{{ pagetitle }}{% endblock %}
 
+{% block stylesheets %}
+    <style>
+        .chatbot-attach{
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .chatbot-attach a{
+            position: absolute;
+            right: 0px;
+            top: 0px;
+        }
+    </style>
+{% endblock %}
+
+
 {% block content %}
 
     {% set navigation = [{"dashboard_index": "Dashboard"|trans,"current":(pagetitle)}] %}
@@ -16,53 +33,59 @@
                     {% include "Dashboard/sidebar.html.twig" %}
                 </aside>
                 <div class="col-lg-9 mt-4 mt-lg-0">
+                    <div class="card shadow">
+                        <div class="card-body">
+                               
+                            <form action="{{ path('chatbot_train_store',{"type":"attachment"}) }}" method="post" enctype="multipart/form-data">
 
-                    <form action="{{ path('chatbot_train_store',{"type":"attachment"}) }}" method="post" enctype="multipart/form-data">
-                        <div class="card shadow">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center gap-5">
-                                    <h3>Train Text Bot</h3>
-                                    <button type="submit" class="btn btn-info rounded">Train</button>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label>Chatbot</label>
+                                            <select class="form-control" name="bot_select" id="bot_select" required>
+                                                <option value="" disabled selected>Select A Bot</option>
+                                                {% for bot in bots %}
+                                                    <option value="{{ bot['id'] }}">{{ bot['name'] }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mt-5">
 
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label>Description</label>
+                                            <textarea name="text" rows="4" placeholder="Describe whe information contained in the file to be attached for training. For example FAQ, DOcuments containing information about topics, parking,  …" class="form-control"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                    <div class="attach_append">
-                                        <div class="attach_child my-5">
-                                            <div class="mb-2">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <select class="form-control" name="bot_select[]" id="bot_select">
-                                                            <option value="" disabled selected>Select A Bot</option>
-                                                            {% for bot in bots %}
-                                                                <option value="{{ bot['id'] }}">{{ bot['name'] }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="file" name="file[]" accept=".txt" class="form-control">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-2">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <textarea name="text[]" placeholder="Write text for train your chatbot" class="form-control"></textarea>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <a href="javascript:void(0)" class="btn btn-success add_more_btn">Add More</a>
-                                                    </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group attch-parent-chatbot">
+                                            <label>Attachment</label>
+                                            <div class="attach_append">
+                                                <div class="chatbot-attach">
+                                                    <input type="file" name="file[]" accept=".txt" class="form-control">
+                                                    <a href="javascript:void(0)" class="btn btn-success rounded add_more_btn">+</a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
-
-
                                 </div>
-                            </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-info rounded">Train</button>
+                                        </div>
+                                    </div>
+                                </div>   
+                            </form>
+
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,39 +110,16 @@
         $(document).ready(function(){
             $('.add_more_btn').click(function(){
                 $('.attach_append').append(`
-                   <div class="attach_child my-5">
-                        <div class="mb-2">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <select class="form-control" name="bot_select[]" id="bot_select">
-                                        <option value="" disabled selected>Select A Bot</option>
-                                        {% for bot in bots %}
-                                            <option value="{{ bot['id'] }}">{{ bot['name'] }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="file" name="file[]" accept=".txt" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <textarea name="text[]" placeholder="Write text for train your chatbot" class="form-control"></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <a href="javascript:void(0)" class="btn btn-danger remove_btn">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>  
+                   <div class="chatbot-attach mt-3">
+                        <input type="file" name="file[]" accept=".txt" class="form-control">
+                        <a href="javascript:void(0)" class="btn btn-danger rounded remove_btn">-</a>
+                    </div>
                 `)
             })
 
 
             $(document).on('click', '.remove_btn', function(){
-                $(this).parent().parent().parent().parent().remove()
+                $(this).parent().remove()
             })
         })
     </script>
