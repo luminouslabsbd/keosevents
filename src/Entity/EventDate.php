@@ -68,6 +68,14 @@ class EventDate {
     private $payoutRequests;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\Length(max = 255)
+     */
+    private $meetinglink;
+
+    /**
      * @ORM\Column(type="boolean")
      * @Assert\NotNull(groups={"create", "update"})
      */
@@ -399,6 +407,16 @@ class EventDate {
         if ($this->pointofsales->contains($pointofsale)) {
             $this->pointofsales->removeElement($pointofsale);
         }
+
+        return $this;
+    }
+
+    public function getMeetinglink() {
+        return $this->meetinglink;
+    }
+
+    public function setMeetinglink($meetinglink) {
+        $this->meetinglink = $meetinglink;
 
         return $this;
     }

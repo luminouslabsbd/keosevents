@@ -84,11 +84,11 @@ class EventDateType extends AbstractType {
                     },
                 ])
 
-                ->add('add_link', TextType::class, [
+                ->add('meetinglink', TextType::class, [
                     'purify_html' => true,
                     'required' => false,
-                    'attr' => ['class' => 'add_link'],
-                    'label' => 'Add Link',
+                    'label' => 'Meeting Link',
+                    'help' => 'Please Give A valid Meeting Link!'
                 ])
 
                 ->add('scanners', EntityType::class, [
