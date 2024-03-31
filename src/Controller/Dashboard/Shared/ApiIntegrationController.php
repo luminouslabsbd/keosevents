@@ -79,6 +79,8 @@ class ApiIntegrationController extends Controller {
         $zoomService = new ZoomService($zoom_data['zoom_account_id']??'', $zoom_data['zoom_clint_id']??'', $zoom_data['zoom_clint_secret']??'');
         $response = $zoomService->createMeeting($data);
 
+        // dd($response);
+
         $sql = "INSERT INTO event_zoom_meeting_list (uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, settings) 
                 VALUES (:uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :settings)";
                     $params = [
