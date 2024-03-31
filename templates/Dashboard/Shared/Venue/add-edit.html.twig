@@ -57,31 +57,31 @@
                                             <th>Description (optional)</th>
                                             <th>Web url</th>
                                             <th>Type</th>
-                                            <th>Start time</th>
+                                            {# <th>Start time</th> #}
                                             <th>Time zone</th>
-                                            <th>Created at</th>
+                                            {# <th>Created at</th> #}
                                             <th>App url</th>
                                         </tr>
                                     </thead>
                                     <tbody>
 
-                                    {% if(zoom_meeting['status'] != false) %}
-                                        {% for meeting in zoom_meeting['data']['meetings'] %}
+                                    {# {% if(zoom_meeting['status'] != false) %} #}
+                                        {% for meeting in zoom_meeting %}
 
-                                                {% set start_time = meeting['start_time'] %}
-                                                {% set created_at = meeting['created_at'] %}
+                                                {# {% set start_time = meeting['start_time'] %}
+                                                {% set created_at = meeting['created_at'] %} #}
                                             <tr>
                                                 <td>{{ meeting['topic'] ?? '' }}</td>
                                                 <td> {{ meeting['agenda'] ?? '' }} </td>
                                                 <td><a target="_blank" href="{{ meeting['join_url'] }}">join</a></td>
                                                 <td>Schedule Meeting</td>
-                                                <td>{{ start_time|date('d M, Y H:i:s') }}</td>
+                                                {# <td>{{ start_time|date('d M, Y H:i:s') }}</td> #}
                                                 <td>{{ meeting['timezone'] ?? '' }}</td>
-                                                <td>{{ created_at|date('d M, Y H:i:s') }}</td>
+                                                {# <td>{{ created_at|date('d M, Y H:i:s') }}</td> #}
                                                 <td><a target="_blank" href="{{ meeting['join_url'] }}">join</a></td>
                                             </tr> 
                                         {% endfor %}
-                                    {%endif%}
+                                    {# {%endif%} #}
                                     </tbody>
                                 </table>
                             </div>
