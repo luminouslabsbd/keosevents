@@ -698,7 +698,7 @@ class OrderController extends Controller {
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $link = $event_meeting['join_link'];
+    $link = $event_meeting['join_url'];
 
         $pdfOptions = new Options();
 //$pdfOptions->set('defaultFont', 'Arial');

@@ -413,11 +413,11 @@
     <script>
         ZoomMtg.preLoadWasm()
         ZoomMtg.prepareWebSDK()
-
-        var authEndpoint = 'https://zoom.keosapp.com'
-        var sdkKey = 'bKhbgbAOR_CwOiOkBQOK0Q'
-        var meetingNumber = '89219418793'
-        var passWord = '12345678'
+        
+        var authEndpoint = '{{ zoomAuthEndPoint }}'
+        var sdkKey = '{{ sdkKey }}'
+        var meetingNumber = '{{ event_meeting['meeting_id'] }}'
+        var passWord = '{{ event_meeting['password'] }}'
         var role = 0
         var userName = 'JavaScript'
         var userEmail = ''
