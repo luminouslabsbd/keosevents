@@ -9,7 +9,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ZoomSdkController extends Controller
 {
-  public function zoomSdkPlayer(Request $request, Connection $connection, $reference, TranslatorInterface $translator)
+  public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator, $reference)
+
   {
     $sqlEvent = "SELECT * FROM eventic_event WHERE reference = :reference";
     $paramsEvent = ['reference' => $reference];

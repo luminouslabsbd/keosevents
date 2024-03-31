@@ -81,8 +81,11 @@ class ApiIntegrationController extends Controller {
 
         // dd($response);
 
-        $sql = "INSERT INTO event_zoom_meeting_list (uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, settings) 
-                VALUES (:uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :settings)";
+        $user = $this->getUser();
+        $authId = $user->getId();
+
+        $sql = "INSERT INTO event_zoom_meeting_list (org_id, uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, settings) 
+                VALUES (:org_id, :uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :settings)";
                     $params = [
                         'uuid'              => $response['data']['uuid'],
                         'meeting_id'        => $response['data']['id'],
@@ -97,6 +100,7 @@ class ApiIntegrationController extends Controller {
                         'join_url'          => $response['data']['join_url'],
                         'password'          => $response['data']['password'],
                         'settings'          => null,
+                        'org_id'          => $authId,
                         // 'settings'          => json_encode($response['data']['settings']),
                     ];
 
