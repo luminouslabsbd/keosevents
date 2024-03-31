@@ -210,4 +210,8 @@ start_quiz:
     path: /start/quiz/{quiz}
     controller: 'App\Controller\Dashboard\Quiz\QuizController::startQuiz'
     methods: ['GET']
+close_quiz:
+    path: /close/quiz/{quiz}
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::closeQuiz'
+    methods: ['GET']
 

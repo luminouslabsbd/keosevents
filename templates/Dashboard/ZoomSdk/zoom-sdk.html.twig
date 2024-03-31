@@ -180,9 +180,81 @@
             color: black;
             opacity: 1;
         }
+
+        .modal_minimize_icon {
+            padding-top: 9px !important;
+            border: 1px solid #ddd !important;
+        }
+        .modal_minimize_icon i{
+            font-size:16px;
+        }
+        .modal_close_icon {
+            border: 1px solid #ddd !important;
+            height: 44px !important;
+            margin-left:15px !important;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+
+    <style type="text/css">  
+
+        .modal-header .btnGrp{
+            position: absolute;
+            top: 8px;
+            right: 10px;
+        } 
+    
+
+        .min{
+            width: 250px; 
+            height: 35px;
+            overflow: hidden !important;
+            padding: 0px !important;
+            margin: 0px;    
+
+            float: left;  
+            position: static !important; 
+        }
+
+        .min .modal-dialog, .min .modal-content{
+            height: 100%;
+            width: 100%;
+            margin: 0px !important;
+            padding: 0px !important; 
+        }
+
+        .min .modal-header{
+            height: 100%;
+            width: 100%;
+            margin: 0px !important;
+            padding: 3px 5px !important; 
+        }
+
+        .display-none{display: none;}
+
+        button .fa{
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .min .fa{
+            font-size: 14px; 
+        }
+
+        .min .menuTab{display: none;}
+
+        button:focus { outline: none; }
+
+        .minmaxCon{
+            height: 35px;
+            bottom: 1px;
+            left: 1px;
+            position: fixed;
+            right: 1px;
+            z-index: 9999;
+        }
+    </style> 
 {% endblock %}
 
 {% block content %}
@@ -295,13 +367,18 @@
 
 
 
-    <div class="modal fade" data-keyboard="false" data-backdrop="static"  id="quiz_start_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal fade mymodal" data-keyboard="false" data-backdrop="static"  id="quiz_start_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
           <div class="modal-dialog  modal-lg inner-quize-modal-xl modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title start-quiz-heading" id="exampleModalLongTitle">Quiz demo</h5>
-                    {# <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span> #}
+
+                    {# <button type="button" class="modal_minimize_icon modalMinimize">
+                        <i class='fa fa-minus'></i>
+                    </button> #}
+
+                    <button type="button" class="close modal_close_icon" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
@@ -314,10 +391,13 @@
         </div>
     </div>
 
+    <div class="minmaxCon"></div>  
+
 
     
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
 
@@ -402,28 +482,51 @@
     <!-- For Component View -->
     <!-- <script src="https://source.zoom.us/3.1.6/zoom-meeting-embedded-3.1.6.min.js"></script>
     <script type="text/javascript" src="component-view.js"></script> -->
-<script>
-
-</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
     <script>
         var socket = io("{{ nodeServer }}", {
-                secure: true,
+            secure: true,
         })
-        socket.on("quiz_start", function(response) {
+        socket.on("start_quiz_", function(response) {
             $('#quiz_start_modal').modal('show');
         });
 
-        socket.on("show_result", function(response) {
+        socket.on("close_quiz_", function(response) {
             $('#quiz_start_modal').modal('hide');
         });
-        
-        {# socket.on("show_winner", function(response) {
-            $('#show_winner_modal').modal('show');
-        }); #}
     </script>
 
+    <script>
+        $(document).ready(function(){ 
+            var $content, $modal, $apnData, $modalCon; 
+            $content = $(".min");
 
+            $(".modalMinimize").on("click", function(){
+                $modalCon = $(this).closest(".mymodal").attr("id");  
+                $apnData = $(this).closest(".mymodal");
+                $modal = "#" + $modalCon;
+                $(".modal-backdrop").addClass("display-none");
+
+                $($modal).toggleClass("min");
+                if ( $($modal).hasClass("min") ){ 
+                    $(".minmaxCon").append($apnData);  
+                    $(this).find("i").toggleClass('fa-minus fa-clone');
+                } 
+                else { 
+                    $(".container").append($apnData); 
+                    $(this).find("i").toggleClass('fa-clone fa-minus');
+                };
+            });
+
+            $("button[data-dismiss='modal']").click(function(){   
+                var $modal = $(this).closest(".mymodal");
+                $modal.removeClass("min");
+                $(".container").append($modal);   
+                $modal.find(".modalMinimize i").removeClass('fa-clone').addClass('fa-minus');
+            }); 
+        });
+    </script>
+    
 
 {% endblock %}
