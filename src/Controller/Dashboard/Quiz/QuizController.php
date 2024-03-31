@@ -73,7 +73,7 @@ class QuizController extends Controller
 
     $data = [
       'name' => 'close quiz',
-      'channel' => 'start_quiz_' . $params,
+      'channel' => 'close_quiz_' . $params,
     ];
 
     $payload = json_encode($data);
