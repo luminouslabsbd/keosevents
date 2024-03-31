@@ -684,9 +684,21 @@ class OrderController extends Controller {
     if (!$event_date) {
         $this->addFlash('error', $translator->trans('The event date can not be found'));
         return $this->redirect($request->headers->get('referer'));
-    }else{
-        $link = $event_date['meetinglink'];
     }
+
+    $link_id = $event_date['meetinglink'];
+
+    $sql4 = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
+    $params4 = ['id' => $link_id];
+    $statement4 = $connection->prepare($sql4);
+    $statement4->execute($params4);
+    $event_meeting = $statement4->fetch();
+
+    if (!$event_meeting) {
+        $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+    $link = $event_meeting['join_url'];
 
         $pdfOptions = new Options();
 //$pdfOptions->set('defaultFont', 'Arial');

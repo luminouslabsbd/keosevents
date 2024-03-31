@@ -810,10 +810,16 @@ $(document).ready(function () {
                         if (this.value == 1) {
                             $(this).closest('.form-group').next('.form-group').hide();
                             $(this).closest('.form-group').next('.form-group').find(".event-date-venue").val([]);
+                            $(this).closest('.form-group').next('.form-group').next('.form-group').show(); // Show the 2nd closest field
+                            $(this).closest('.form-group').next('.form-group').next('.form-group').find(".meeting-link").show(); // Show the meeting link field
                         } else {
                             $(this).closest('.form-group').next('.form-group').show();
+                            $(this).closest('.form-group').next('.form-group').next('.form-group').hide(); // Hide the 2nd closest field
+                            $(this).closest('.form-group').next('.form-group').next('.form-group').find(".meeting-link").hide(); // Hide the meeting link field
                         }
                     });
+                    
+                    
                     if ($('.section-content').hasClass("edit-event")) {
                         $(".is-event-date-online input[type=radio]:checked").each(function () {
                             if (this.value == 1) {

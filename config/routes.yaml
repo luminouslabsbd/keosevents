@@ -186,7 +186,7 @@ chatbot_train_store:
 #     methods: ['POST']
 
 zoom_sdk_player:
-    path: /zoom_sdk_player/
+    path: /join_event_meeting/{reference?}
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
 
@@ -209,5 +209,9 @@ quiz_setting:
 start_quiz:
     path: /start/quiz/{quiz}
     controller: 'App\Controller\Dashboard\Quiz\QuizController::startQuiz'
+    methods: ['GET']
+close_quiz:
+    path: /close/quiz/{quiz}
+    controller: 'App\Controller\Dashboard\Quiz\QuizController::closeQuiz'
     methods: ['GET']
 

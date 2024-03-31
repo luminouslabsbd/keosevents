@@ -39,9 +39,21 @@ class TicketController extends Controller
         $this->addFlash('error', $translator->trans('The event date can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-
-    $link = $event_date['meetinglink'];
     $event_date_id = $event_date['id'];
+    $link_id = $event_date['meetinglink'];
+
+    $sql5 = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
+    $params5 = ['id' => $link_id];
+    $statement5 = $connection->prepare($sql5);
+    $statement5->execute($params5);
+    $event_meeting = $statement5->fetch();
+
+    if (!$event_meeting) {
+        $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+    $link = $event_meeting['join_url'];
+    
 
     $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
     $params2 = ['id' => $event_date_id];
@@ -238,13 +250,25 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         return $this->redirect($request->headers->get('referer'));
     }
 
-    $link = $event_date['meetinglink'];
+    $link_id = $event_date['meetinglink'];
 
-    $sql5 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
-    $params5 = ['id' => $event_date_id];
+    $sql5 = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
+    $params5 = ['id' => $link_id];
     $statement5 = $connection->prepare($sql5);
     $statement5->execute($params5);
-    $event_ticket = $statement5->fetch();
+    $event_meeting = $statement5->fetch();
+
+    if (!$event_meeting) {
+        $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+    $link = $event_meeting['join_url'];
+
+    $sql6 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
+    $params6 = ['id' => $event_date_id];
+    $statement6 = $connection->prepare($sql6);
+    $statement6->execute($params6);
+    $event_ticket = $statement6->fetch();
 
     if (!$event_ticket) {
         $this->addFlash('error', $translator->trans('The event ticket can not be found'));
