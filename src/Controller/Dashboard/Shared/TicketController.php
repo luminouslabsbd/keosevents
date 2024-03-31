@@ -52,7 +52,7 @@ class TicketController extends Controller
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $link = $event_meeting['join_link'];
+    $link = $event_meeting['join_url'];
     
 
     $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
@@ -262,7 +262,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $link = $event_meeting['join_link'];
+    $link = $event_meeting['join_url'];
 
     $sql6 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
     $params6 = ['id' => $event_date_id];
