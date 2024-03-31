@@ -19,18 +19,31 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use App\Form\EventTicketType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\EntityManagerInterface;
 
 class EventDateType extends AbstractType {
 
     private $services;
     private $user;
+    private $entityManager;
 
-    public function __construct(AppServices $services, TokenStorageInterface $tokenStorage) {
+    public function __construct(AppServices $services, TokenStorageInterface $tokenStorage, EntityManagerInterface $entityManager) {
         $this->services = $services;
         $this->user = $tokenStorage->getToken()->getUser();
+        $this->entityManager = $entityManager;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options) {
+       
+        $sqlMeetingList = "SELECT id, topic FROM event_zoom_meeting_list";
+        $statementMeetingList = $this->entityManager->getConnection()->prepare($sqlMeetingList);
+        $statementMeetingList->execute();
+        $meeting_lists = $statementMeetingList->fetchAll();
+        foreach ($meeting_lists as $meeting) {
+            $choices[$meeting['topic']] = $meeting['id'];
+        }
+
         $builder
                 ->add('active', ChoiceType::class, [
                     'required' => true,
@@ -83,12 +96,12 @@ class EventDateType extends AbstractType {
                         return $this->services->getVenues(array("organizer" => $this->user->getOrganizer()->getSlug()));
                     },
                 ])
-
-                ->add('meetinglink', TextType::class, [
-                    'purify_html' => true,
+                ->add('meetingLink', ChoiceType::class, [
                     'required' => false,
-                    'label' => 'Meeting Link',
-                    'help' => 'Please Give A valid Meeting Link!'
+                    'choices' => $choices,
+                    'placeholder' => 'Select a meeting link', // Optional placeholder
+                    'label' => 'Meeting Link', // Change label as needed
+                    'attr' => ['class' => 'meeting-link-select'], // Add any additional attributes
                 ])
 
                 ->add('scanners', EntityType::class, [

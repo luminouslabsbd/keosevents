@@ -78,6 +78,29 @@ class ApiIntegrationController extends Controller {
 
         $zoomService = new ZoomService($zoom_data['zoom_account_id']??'', $zoom_data['zoom_clint_id']??'', $zoom_data['zoom_clint_secret']??'');
         $response = $zoomService->createMeeting($data);
+
+        $sql = "INSERT INTO event_zoom_meeting_list (uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, settings) 
+                VALUES (:uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :settings)";
+                    $params = [
+                        'uuid'              => $response['data']['uuid'],
+                        'meeting_id'        => $response['data']['id'],
+                        'host_id'           => $response['data']['host_id'],
+                        'host_email'        => $response['data']['host_email'],
+                        'topic'             => $response['data']['topic'],
+                        'status'            => $response['data']['status'],
+                        'duration'          => $response['data']['duration'],
+                        'timezone'          => $response['data']['timezone'],
+                        'agenda'            => $response['data']['agenda'],
+                        'start_url'          => $response['data']['start_url'],
+                        'join_url'          => $response['data']['join_url'],
+                        'password'          => $response['data']['password'],
+                        'settings'          => null,
+                        // 'settings'          => json_encode($response['data']['settings']),
+                    ];
+
+                    $statement = $entityManager->getConnection()->prepare($sql);
+                    $statement->execute($params);
+
         return $this->redirectToRoute('dashboard_organizer_venue_add');
         // return new JsonResponse($response);
     }
