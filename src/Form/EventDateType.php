@@ -36,15 +36,10 @@ class EventDateType extends AbstractType {
 
     public function buildForm(FormBuilderInterface $builder, array $options) {
        
-        $user = $this->getUser();
-        $authId = $user->getId();
-
-        $sqlMeetingList = "SELECT id, topic, org_id FROM event_zoom_meeting_list WHERE org_id = :authId";
+        $sqlMeetingList = "SELECT id, topic, org_id FROM event_zoom_meeting_list";
         $statementMeetingList = $this->entityManager->getConnection()->prepare($sqlMeetingList);
-        $statementMeetingList->bindValue(':authId', $authId); 
         $statementMeetingList->execute();
         $meeting_lists = $statementMeetingList->fetchAll();
-
         foreach ($meeting_lists as $meeting) {
             $choices[$meeting['topic']] = $meeting['id'];
         }
