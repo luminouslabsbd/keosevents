@@ -22,27 +22,14 @@ class QuizController extends Controller
     $meetings = $statement->fetchAll();
 
 
-
-    // $user = $this->getUser();
-    // $userId = $user->getId();
-    // $apiType = 'zoom';
-    // $sqlSelect = "SELECT * FROM api_settings WHERE user_id = :user_id AND api_type = :api_type";
-    // $paramsSelect = [
-    //   'user_id' => $userId,
-    //   'api_type' => $apiType,
-    // ];
-    // $statementSelect = $entityManager->getConnection()->prepare($sqlSelect);
-    // $statementSelect->execute($paramsSelect);
-    // $zoom_data = $statementSelect->fetch();
-
-    // $sql2 = "SELECT * FROM event_zoom_meeting_list WHERE end_date > :now";
-    // $statement2 = $entityManager->getConnection()->prepare($sql2);
-    // $statement2->execute(['now' => $nowFormatted]);
-    // $zoom_meeting = $statement2->fetchAll();
+    $sql2 = "SELECT * FROM event_zoom_meeting_list";
+    $statement2 = $entityManager->getConnection()->prepare($sql2);
+    $statement2->execute(['now' => $nowFormatted]);
+    $zoom_meeting = $statement2->fetchAll();
 
     return $this->render('Dashboard/Quiz/quiz-setting.html.twig',[
       'google_meeting' => $meetings,
-      // 'zoom_meeting' => $zoom_meeting,
+      'zoom_meeting' => $zoom_meeting,
     ]);
   }
 
@@ -53,7 +40,6 @@ class QuizController extends Controller
     $url = $nodeServer. 'new-message-emit';
 
     $params = $request->get('quiz');
-
     $data = [
       'name' => 'start quiz',
       'channel' => 'start_quiz_'.$params,
@@ -87,7 +73,7 @@ class QuizController extends Controller
 
     $data = [
       'name' => 'close quiz',
-      'channel' => 'close_quiz_' . $params,
+      'channel' => 'start_quiz_' . $params,
     ];
 
     $payload = json_encode($data);

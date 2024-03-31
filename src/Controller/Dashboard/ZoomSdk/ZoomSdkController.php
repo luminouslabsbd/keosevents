@@ -5,10 +5,11 @@ namespace App\Controller\Dashboard\ZoomSdk;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\DBAL\Connection;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ZoomSdkController extends Controller
 {
-  public function zoomSdkPlayer(Request $request, Connection $connection, $reference)
+  public function zoomSdkPlayer(Request $request, Connection $connection, $reference, TranslatorInterface $translator)
   {
     $sqlEvent = "SELECT * FROM eventic_event WHERE reference = :reference";
     $paramsEvent = ['reference' => $reference];

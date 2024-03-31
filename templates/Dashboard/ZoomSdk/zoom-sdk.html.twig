@@ -488,11 +488,11 @@
         var socket = io("{{ nodeServer }}", {
             secure: true,
         })
-        socket.on("start_quiz_", function(response) {
+        socket.on("start_quiz_{{ event_meeting['meeting_id'] }}", function(response) {
             $('#quiz_start_modal').modal('show');
         });
 
-        socket.on("close_quiz_", function(response) {
+        socket.on("close_quiz_{{ event_meeting['meeting_id'] }}", function(response) {
             $('#quiz_start_modal').modal('hide');
         });
     </script>
