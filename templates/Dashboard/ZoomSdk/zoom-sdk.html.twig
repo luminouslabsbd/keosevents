@@ -414,10 +414,10 @@
         ZoomMtg.preLoadWasm()
         ZoomMtg.prepareWebSDK()
 
-        var authEndpoint = ''
-        var sdkKey = ''
-        var meetingNumber = '88979508148'
-        var passWord = 'Rf3xCC'
+        var authEndpoint = '{{ zoomAuthEndPoint }}'
+        var sdkKey = '{{ sdkKey }}'
+        var meetingNumber = '{{ event_meeting['meeting_id'] }}'
+        var passWord = '{{ event_meeting['password'] }}'
         var role = 0
         var userName = 'JavaScript'
         var userEmail = ''

@@ -186,7 +186,7 @@ chatbot_train_store:
 #     methods: ['POST']
 
 zoom_sdk_player:
-    path: /zoom_sdk_player/
+    path: /join_event_meeting/{reference?}
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
 
