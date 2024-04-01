@@ -110,28 +110,16 @@ class VenueController extends Controller {
         }
 
         // zoom all meeting get
+
         $user = $this->getUser();
         $userId = $user->getId();
-        $apiType = 'zoom';
-        $sqlSelect = "SELECT * FROM api_settings WHERE user_id = :user_id AND api_type = :api_type";
-        $paramsSelect = [
-            'user_id' => $userId,
-            'api_type' => $apiType,
-        ];
-        $statementSelect = $entityManager->getConnection()->prepare($sqlSelect);
-        $statementSelect->execute($paramsSelect);
-        $zoom_data = $statementSelect->fetch();
-
-
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $nowFormatted = $now->format('Y-m-d H:i:s');
-        $sql2 = "SELECT * FROM event_zoom_meeting_list";
-        $statement2 = $entityManager->getConnection()->prepare($sql2);
-        $statement2->execute(['now' => $nowFormatted]);
-        $zoom_meeting = $statement2->fetchAll();
 
-        // $service = new ZoomService($zoom_data['zoom_account_id'] ?? '', $zoom_data['zoom_clint_id'] ?? '', $zoom_data['zoom_clint_secret'] ?? '');
-        // $zoom_meeting = $service->getAllMeeting();
+        $sql2 = "SELECT * FROM event_zoom_meeting_list WHERE org_id = :userId AND end_date > :now";
+        $statement2 = $entityManager->getConnection()->prepare($sql2);
+        $statement2->execute(['userId' => $userId, 'now' => $nowFormatted]);
+        $zoom_meeting = $statement2->fetchAll();
         
         $google_meeting = $this->getGoogleMeetingData($entityManager);
 
