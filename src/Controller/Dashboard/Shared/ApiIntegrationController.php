@@ -80,12 +80,16 @@ class ApiIntegrationController extends Controller {
         $response = $zoomService->createMeeting($data);
 
         // dd($response);
+        $startDate = date('Y-m-d H:i:s', strtotime($response['data']['start_time']));
+        $end_date_sec     = $response['data']['duration'] * 60 + strtotime($startDate);
+        $endDate         = date('Y-m-d H:i:s', $end_date_sec);
+        $createdAt = date('Y-m-d H:i:s', strtotime($response['data']['created_at']));
 
         $user = $this->getUser();
         $authId = $user->getId();
 
-        $sql = "INSERT INTO event_zoom_meeting_list (org_id, uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, settings) 
-                VALUES (:org_id, :uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :settings)";
+        $sql = "INSERT INTO event_zoom_meeting_list (org_id, uuid, meeting_id, host_id, host_email, topic, status, duration, timezone, agenda, start_url, join_url, password, start_date, end_date, created_at, settings) 
+                VALUES (:org_id, :uuid, :meeting_id, :host_id, :host_email, :topic, :status, :duration, :timezone, :agenda, :start_url, :join_url, :password, :start_date, :end_date, :created_at , :settings)";
                     $params = [
                         'uuid'              => $response['data']['uuid'],
                         'meeting_id'        => $response['data']['id'],
@@ -96,11 +100,14 @@ class ApiIntegrationController extends Controller {
                         'duration'          => $response['data']['duration'],
                         'timezone'          => $response['data']['timezone'],
                         'agenda'            => $response['data']['agenda'],
-                        'start_url'          => $response['data']['start_url'],
+                        'start_url'         => $response['data']['start_url'],
                         'join_url'          => $response['data']['join_url'],
                         'password'          => $response['data']['password'],
                         'settings'          => null,
-                        'org_id'          => $authId,
+                        'org_id'            => $authId,
+                        'start_date'        => $startDate,
+                        'end_date'          => $endDate,
+                        'created_at'         => $createdAt,
                         // 'settings'          => json_encode($response['data']['settings']),
                     ];
 
