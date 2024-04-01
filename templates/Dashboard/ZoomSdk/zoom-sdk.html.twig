@@ -8,13 +8,17 @@
     <style>
         html,
         body {
+            height: auto !important;
             min-width: 0 !important;
             font-size: 13px !important;
+            overflow-y: auto !important;
         }
 
         #zmmtg-root {
             display: none;
             min-width: 0 !important;
+            position: relative !important;
+            background-color: #fff !important;
         }
 
         .main {
@@ -192,6 +196,24 @@
             border: 1px solid #ddd !important;
             height: 44px !important;
             margin-left:15px !important;
+        }
+
+        .section-content {
+            min-height: 49vh;
+        }
+
+        div#preview-av-video {
+            position: relative;
+            width: 300px !important;
+            min-height: 160px;
+            top: 0;
+            left: 0;
+            margin-top: 24px;
+        }
+
+        .waiting-room-container .wr-default-bg.wr-bg-full-screen{
+            {# max-height: 659px; #}
+            max-height: 580px;
         }
     </style>
 
@@ -441,6 +463,10 @@
             }).then((data) => {
                 // console.log(data)
                 startMeeting(data.signature)
+
+                if ($("#zmmtg-root").attr('style') !== undefined) {
+                    $(".section-content").hide();
+                }
             }).catch((error) => {
                 // alert('SDK key Not Valid')
                 console.log(error)
