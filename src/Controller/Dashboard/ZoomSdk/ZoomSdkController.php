@@ -47,13 +47,27 @@ class ZoomSdkController extends Controller
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
+
+    $user    = $this->getUser();
+    $userId  = $user->getId();
+
+    $sql6 = "SELECT * FROM api_settings WHERE user_id = :user_id";
+    $params6 = ['user_id' => $userId];
+    $statement6 = $connection->prepare($sql6);
+    $statement6->execute($params6);
+    $api_setting = $statement6->fetch();
+
+    if (!$api_setting) {
+        $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
     
     
       return $this->render('Dashboard/ZoomSdk/zoom-sdk.html.twig',[
         'nodeServer' => $_ENV['NODE_SERVER'],
         'quizApiUrl' => $_ENV['QUIZ_API'],
         'zoomAuthEndPoint' => $_ENV['ZOOM_AUTH_END_POINT'],
-        'sdkKey' => $_ENV['SDK_KEY'],
+        'sdkKey' => $api_setting['sdk_key'],
         'event_meeting' => $event_meeting
       ]);
 
