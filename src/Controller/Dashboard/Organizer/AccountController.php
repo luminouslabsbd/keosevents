@@ -68,8 +68,9 @@ class AccountController extends Controller {
         $apiType = 'zoom';
 
         $zoomAccountId      = $input['zoom_account_id'];
-        $zoomClintId       = $input['zoom_clint_id'];
-        $zoomClintSecret   = $input['zoom_clint_secret'];
+        $zoomClintId        = $input['zoom_clint_id'];
+        $zoomClintSecret    = $input['zoom_clint_secret'];
+        $SDK_key            = $input['sdk_key'];
 
         $sqlSelect = "SELECT * FROM api_settings WHERE user_id = :user_id AND api_type = :api_type";
         $paramsSelect = [
@@ -81,10 +82,10 @@ class AccountController extends Controller {
         $row = $statementSelect->fetch();
 
         if ($row) {
-            $sql = "UPDATE api_settings SET zoom_account_id = :zoom_account_id, zoom_clint_id = :zoom_clint_id, zoom_clint_secret = :zoom_clint_secret WHERE user_id = :user_id AND api_type = :api_type";
+            $sql = "UPDATE api_settings SET zoom_account_id = :zoom_account_id, zoom_clint_id = :zoom_clint_id, zoom_clint_secret = :zoom_clint_secret, sdk_key = :sdk_key WHERE user_id = :user_id AND api_type = :api_type";
         } else {
-            $sql = "INSERT INTO api_settings (user_id, api_type, zoom_account_id, zoom_clint_id, zoom_clint_secret) 
-            VALUES (:user_id, :api_type, :zoom_account_id, :zoom_clint_id, :zoom_clint_secret)";
+            $sql = "INSERT INTO api_settings (user_id, api_type, zoom_account_id, zoom_clint_id, zoom_clint_secret, sdk_key) 
+            VALUES (:user_id, :api_type, :zoom_account_id, :zoom_clint_id, :zoom_clint_secret, :sdk_key)";
         }
 
         $params = [
@@ -93,6 +94,7 @@ class AccountController extends Controller {
             'zoom_account_id' => $zoomAccountId,
             'zoom_clint_id' => $zoomClintId,
             'zoom_clint_secret' => $zoomClintSecret,
+            'sdk_key' => $SDK_key,
         ];
         $statement = $entityManager->getConnection()->prepare($sql);
         $statement->execute($params);
