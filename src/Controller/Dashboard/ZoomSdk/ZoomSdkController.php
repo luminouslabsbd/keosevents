@@ -67,6 +67,7 @@ class ZoomSdkController extends Controller
         'nodeServer' => $_ENV['NODE_SERVER'],
         'quizApiUrl' => $_ENV['QUIZ_API'],
         'zoomAuthEndPoint' => $_ENV['ZOOM_AUTH_END_POINT'],
+        'leaveUrl' => $_ENV['MAIN_DOMAIN'],
         'sdkKey' => $api_setting['sdk_key'],
         'event_meeting' => $event_meeting
       ]);
