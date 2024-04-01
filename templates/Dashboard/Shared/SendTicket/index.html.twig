@@ -104,7 +104,7 @@
                                             <button type="button" class="btn btn-sm btn-info mb-2 view-ticket" data-toggle="modal" data-target="#ticketModal_{{ ticket.id }}">{{ "View"|trans({}, "messages", locale) }}</button>
 
                                             <div>
-                                                <a href="{{ path('mail_server_test', {'id': ticket.reference }) }}" class="btn btn-sm btn-primary">Send</a>
+                                                <a href="{{ path('mail_server_test', {'ref_id': ticket.reference,event_id:event_id }) }}" class="btn btn-sm btn-primary">Send</a>
                                             </div>
 
                                             <!-- Modal -->
@@ -148,12 +148,15 @@
                                                                                 {{ link |trans({}, "messages", locale) }}
                                                                             {% endif %}
                                                                         </h6>
-                                                                        {% if orderElement.eventticket.eventdate.event.organizer %}
-                                                                            <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
-                                                                        {% endif %}
-                                                                        {% if not orderElement.eventticket.eventdate.venue %}
-                                                                            <a href="https://{{ link }}" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
-                                                                        {% endif %}
+
+                                                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                                                            {% if orderElement.eventticket.eventdate.event.organizer %}
+                                                                                <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
+                                                                            {% endif %}
+                                                                            {% if not orderElement.eventticket.eventdate.venue %}
+                                                                                <a href="https://{{ link }}" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
+                                                                            {% endif %}
+                                                                        </div>
                                                                     </td>
                                                                     <td width="50%">
                                                                         <h3>

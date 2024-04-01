@@ -76,7 +76,7 @@
 
             {% for ticket in orderElement.tickets %}
 
-                <div class="ticket-wrapper">
+                <div class="ticket-wrapper" style="border: 2px solid black; margin: 20px; padding:15px;">
                     <table width="100%" class="bordered">
                         <tbody>
                         <tr style="background-color: {{ services.getSetting("primary_color") }}; color: #fff;">
@@ -103,12 +103,18 @@
                                     {% else %}
                                         {{ "Online"|trans({}, "messages", locale) }}
                                         <br>
-                                        {{ "https://zoom.us/"|trans({}, "messages", locale) }}
+                                        {{ link |trans({}, "messages", locale) }}
                                     {% endif %}
                                 </h6>
-                                {% if orderElement.eventticket.eventdate.event.organizer %}
-                                    <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
-                                {% endif %}
+                                <div style="margin-top: 10px; width: 100%;">
+                                    {% if orderElement.eventticket.eventdate.event.organizer %}
+                                        <h6 style="float: left;"><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
+                                    {% endif %}
+
+                                    {% if not orderElement.eventticket.eventdate.venue %}
+                                        <a href="{{ link }}" style="float: right; margin-top: 20px; background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td width="50%">
                                 <h3>
@@ -140,10 +146,11 @@
                                 </h6>
                             </td>
                         </tr>
+
                         <tr>
                             <td class="text-center" colspan="2">
                                 <div class="qr-barcode-wrapper">
-                                    {{ barcode({code: ticket.reference, type: 'qrcode', format: 'html'}) }}
+                                   <img src="data:image/png;base64,{{ barcode({code: ticket.reference, type: 'qrcode', format: 'png'}) }}" alt="barcode">
                                 </div>
                             </td>
                         </tr>
