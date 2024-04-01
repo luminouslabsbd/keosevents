@@ -382,7 +382,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="row start-quiz-row-parent quick-links-fream">
+                    <div class="row start-quiz-row-parent quick-links-fream" id="quiz_iframe">
                         <iframe src="{{ quizApiUrl }}" height="200" width="300"  title="quiz"></iframe> 
                     </div>
                 </div>
@@ -416,7 +416,8 @@
         
         var authEndpoint = '{{ zoomAuthEndPoint }}'
         var sdkKey = '{{ sdkKey }}'
-        var meetingNumber = '{{ event_meeting['meeting_id'] }}'
+        {# var meetingNumber = '{{ event_meeting['meeting_id'] }}' #}
+        var meetingNumber = '89219418793'
         var passWord = '{{ event_meeting['password'] }}'
         var role = 0
         var userName = 'JavaScript'
@@ -493,6 +494,9 @@
         });
 
         socket.on("close_quiz_{{ event_meeting['meeting_id'] }}", function(response) {
+            $('#quiz_iframe').html(`
+                <iframe src="{{ quizApiUrl }}" height="200" width="300"  title="quiz"></iframe>
+            `)
             $('#quiz_start_modal').modal('hide');
         });
     </script>

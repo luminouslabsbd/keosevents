@@ -13,18 +13,23 @@ class QuizController extends Controller
 
   public function quizSetting(EntityManagerInterface $entityManager)
   {
+
+    $user = $this->getUser();
+    $userId = $user->getId();
+
     $now = new \DateTime('now', new \DateTimeZone('UTC'));
     $nowFormatted = $now->format('Y-m-d H:i:s');
 
-    $sql = "SELECT * FROM google_meetings WHERE end_date > :now";
+    $sql = "SELECT * FROM google_meetings WHERE organizer_id = :userId AND end_date > :now";
     $statement = $entityManager->getConnection()->prepare($sql);
-    $statement->execute(['now' => $nowFormatted]);
+    $statement->execute(['userId' => $userId, 'now' => $nowFormatted]);
     $meetings = $statement->fetchAll();
 
 
-    $sql2 = "SELECT * FROM event_zoom_meeting_list";
+
+    $sql2 = "SELECT * FROM event_zoom_meeting_list WHERE org_id = :userId AND end_date > :now";
     $statement2 = $entityManager->getConnection()->prepare($sql2);
-    $statement2->execute(['now' => $nowFormatted]);
+    $statement2->execute(['userId' => $userId, 'now' => $nowFormatted]);
     $zoom_meeting = $statement2->fetchAll();
 
     return $this->render('Dashboard/Quiz/quiz-setting.html.twig',[

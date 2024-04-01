@@ -168,8 +168,6 @@ google_api_setting:
     path: /google/api/setting
     controller: App\Controller\Dashboard\Organizer\AccountController::google_api_setting
 
-
-
 chatbot_train:
     path: /chatbot-train/{type}
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::createChatBotTrain'
@@ -179,11 +177,6 @@ chatbot_train_store:
     path: /chatbot-train-store/{type}
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::createChatBotTrainStore'
     methods: ['POST']
-
-# trainBot:
-#     path: /trainBot/
-#     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::trainBot'
-#     methods: ['POST']
 
 zoom_sdk_player:
     path: /join_event_meeting/{reference?}
