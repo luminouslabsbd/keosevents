@@ -99,7 +99,7 @@ class ApiIntegrationController extends Controller {
                         'status'            => $response['data']['status'],
                         'duration'          => $response['data']['duration'],
                         'timezone'          => $response['data']['timezone'],
-                        'agenda'            => $response['data']['agenda'],
+                        'agenda'            => $response['data']['agenda'] ?? "",
                         'start_url'         => $response['data']['start_url'],
                         'join_url'          => $response['data']['join_url'],
                         'password'          => $response['data']['password'],
