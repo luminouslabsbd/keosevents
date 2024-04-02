@@ -35,55 +35,97 @@
                 <div class="col-lg-9 mt-4 mt-lg-0">
                     <div class="card shadow">
                         <div class="card-body">
-                               
-                            <form action="{{ path('chatbot_train_store',{"type":"attachment"}) }}" method="post" enctype="multipart/form-data">
+                            <div class="row">
 
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label>Chatbot</label>
-                                            <select class="form-control" name="bot_select" id="bot_select" required>
-                                                <option value="" disabled selected>Select A Bot</option>
-                                                {% for bot in bots %}
-                                                    <option value="{{ bot['id'] }}">{{ bot['name'] }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="col-md-6">
+                                    <form action="{{ path('chatbot_train_attachment_store') }}" method="post" enctype="multipart/form-data">
 
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label>Description</label>
-                                            <textarea name="text" rows="4" placeholder="Describe whe information contained in the file to be attached for training. For example FAQ, DOcuments containing information about topics, parking,  …" class="form-control"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group attch-parent-chatbot">
-                                            <label>Attachment</label>
-                                            <div class="attach_append">
-                                                <div class="chatbot-attach">
-                                                    <input type="file" name="files" accept=".txt" class="form-control">
-                                                    <a href="javascript:void(0)" class="btn btn-success rounded add_more_btn">+</a>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Template Chatbot</label>
+                                                    <select class="form-control" name="bot_select" id="bot_select" required>
+                                                        <option value="" disabled selected>Select a template</option>
+                                                        {% for bot in bots %}
+                                                            <option value="{{ bot['id'] }}">{{ bot['name'] }}</option>
+                                                        {% endfor %}
+                                                    </select>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Description</label>
+                                                    <textarea name="text" rows="4" placeholder="Describe whe information contained in the file to be attached for training. For example FAQ, DOcuments containing information about topics, parking,  …" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group attch-parent-chatbot">
+                                                    <label>Attachment</label>
+                                                    <div class="attach_append">
+                                                        <div class="chatbot-attach">
+                                                            <input type="file" name="files" accept=".txt" class="form-control">
+                                                            <a href="javascript:void(0)" class="btn btn-success rounded add_more_btn">+</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <button type="submit" class="btn btn-info rounded">Train</button>
+                                                </div>
+                                            </div>
+                                        </div>   
+                                    </form>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Trained Chatbot</label>
+                                                <select class="form-control" name="bot_list" id="bot_list" required>
+                                                    <option value="" disabled selected>Select a chatbot</option>
+                                                    {% for chat_bot_list in chat_bot_lists %}
+                                                        <option value="{{ chat_bot_list['id'] }}">{{ chat_bot_list['name'] }} </option> 
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="">
+                                                <h5>Trained Chatbot List</h5>
+                                                <ul class="navbar-nav mr-auto">
+                                                    <li class="nav-item dropdown">
+                                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            Chatbot List
+                                                        </a>
+                                                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                                        {% if chat_bot_lists|length > 0 %}
+                                                            {% for chat_bot_list in chat_bot_lists %}
+                                                                <p class="dropdown-item">{{ chat_bot_list['name'] }}
+                                                                    <a onclick="return confirm('Are you sure to delete this?')" href="{{ path('delete_chatbot_list', { chatbotId: chat_bot_list['id'] }) }}" class="delete_chatbot_btn btn btn-danger btn-sm" data-id="{{ chat_bot_list['id'] }}">X</a>
+                                                                </p>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <p class="pl-2"> Not aviable chatbot yet </p>
+                                                        {% endif %}
+                                                        </div>
+                                                    </li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <button type="submit" class="btn btn-info rounded">Train</button>
-                                        </div>
-                                    </div>
-                                </div>   
-                            </form>
-
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -91,7 +133,7 @@
         </div>
     </section>
 
-    {% if app.session.has('chatbotId') %}
+    {# {% if app.session.has('chatbotId') %}
         {% set myData = app.session.get('chatbotId') %}
         {% do app.session.remove('chatbotId') %}
 
@@ -102,13 +144,24 @@
                 apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
             });
         </script>
-    {% endif %}
+    {% endif %} #}
 
 
 {% endblock %}
 
 
 {% block javascripts %}
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js";
+        $(document).on('change', '#bot_list',function(){
+            var value = $(this).val();
+            Chatbot.init({
+                chatflowid: value,
+                apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
+            });
+        })
+    </script>
+
     <script>
         $(document).ready(function(){
             $('.add_more_btn').click(function(){
@@ -125,5 +178,30 @@
                 $(this).parent().remove()
             })
         })
+
+        {# $(document).ready(function() {
+            $('.delete_chatbot_btn').click(function(e) {
+                e.preventDefault();
+                var chatbotId = $(this).data('id');
+                alert(chatbotId)
+                $.ajax({
+                    url: "{{ path('delete_chatbot_list', { id: chatbotId }) }}",
+                    type: 'DELETE',
+                    success: function(response) {
+                        $('#bot_list option[value="' + chatbotId + '"]').remove();
+                        $(this).parent().remove();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to delete chatbot:', error);
+                    }
+                });
+            });
+        }); #}
+
+
+
+       
+
+
     </script>
 {% endblock %}
