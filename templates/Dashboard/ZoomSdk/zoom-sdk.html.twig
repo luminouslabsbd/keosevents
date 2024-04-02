@@ -67,7 +67,6 @@
             display: flex;
             justify-content: center;
             margin: auto;
-            padding-left: 158px;
             color: #033c03d1;
             font-weight: 600;
         }
@@ -193,7 +192,6 @@
             font-size:16px;
         }
         .modal_close_icon {
-            border: 1px solid #ddd !important;
             height: 44px !important;
             margin-left:15px !important;
         }
@@ -204,8 +202,7 @@
 
         div#preview-av-video {
             position: relative;
-            width: 300px !important;
-            min-height: 160px;
+            min-height: 143px;
             top: 0;
             left: 0;
             margin-top: 24px;
@@ -214,6 +211,15 @@
         .waiting-room-container .wr-default-bg.wr-bg-full-screen{
             {# max-height: 659px; #}
             max-height: 580px;
+        }
+
+        button.close.modal_close_icon {
+            outline: none;
+            box-shadow: none;
+            margin: 0px;
+            position: relative;
+            top: -8px;
+            right: -6px;
         }
     </style>
 
