@@ -322,8 +322,7 @@ class OrderController extends Controller {
         if ($this->isGranted("ROLE_ATTENDEE")) {
             return $this->render('Dashboard/Attendee/Order/failure.html.twig', [
                         'status' => $status->getValue(),
-                        'paymentdetails' => $payment->getDetails(),
-                        'link' => "null"
+                        'paymentdetails' => $payment->getDetails()
             ]);
         } else {
             return $this->redirectToRoute("dashboard_index");
