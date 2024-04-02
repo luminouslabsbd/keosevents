@@ -99,9 +99,9 @@ class EventDateType extends AbstractType {
                 ->add('meetingLink', ChoiceType::class, [
                     'required' => false,
                     'choices' => $choices,
-                    'placeholder' => 'Select a meeting link', // Optional placeholder
-                    'label' => 'Meeting Link', // Change label as needed
-                    'attr' => ['class' => 'meeting-link-select'], // Add any additional attributes
+                    'placeholder' => 'Select a Meeting Schedule',
+                    'label' => 'Meeting Schedule',
+                    'attr' => ['class' => 'meeting-link-select'],
                 ])
 
                 ->add('scanners', EntityType::class, [

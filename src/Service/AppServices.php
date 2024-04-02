@@ -21,6 +21,7 @@ use App\Entity\Order;
 use App\Entity\OrderElement;
 use App\Entity\OrderTicket;
 use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
+use Doctrine\DBAL\Connection;
 
 class AppServices {
 
@@ -36,8 +37,9 @@ class AppServices {
     private $params;
     private $templating;
     private $urlMatcherInterface;
+    private $connection;
 
-    public function __construct(EntityManagerInterface $entityManager, AuthorizationCheckerInterface $authChecker, RequestStack $requestStack, KernelInterface $kernel, AdapterInterface $cache, UrlGeneratorInterface $router, Security $security, \Swift_Mailer $mailer, TranslatorInterface $translator, ParameterBagInterface $params, \Twig_Environment $templating, UrlMatcherInterface $urlMatcherInterface) {
+    public function __construct(EntityManagerInterface $entityManager, AuthorizationCheckerInterface $authChecker, RequestStack $requestStack, KernelInterface $kernel, AdapterInterface $cache, UrlGeneratorInterface $router, Security $security, \Swift_Mailer $mailer, TranslatorInterface $translator, ParameterBagInterface $params, \Twig_Environment $templating, UrlMatcherInterface $urlMatcherInterface, Connection $connection) {
         $this->em = $entityManager;
         $this->authChecker = $authChecker;
         $this->requestStack = $requestStack;
@@ -49,6 +51,7 @@ class AppServices {
         $this->translator = $translator;
         $this->params = $params;
         $this->templating = $templating;
+        $this->connection = $connection;
         $this->urlMatcherInterface = $urlMatcherInterface;
     }
 
@@ -240,19 +243,89 @@ class AppServices {
         }
         $this->em->persist($order);
         $this->em->flush();
+        
         if ($order->getUser()->hasRole("ROLE_ATTENDEE")) {
-            $this->sendOrderConfirmationEmail($order, $order->getPayment()->getClientEmail());
+            $this->sendOrderConfirmationEmail($order, $order->getPayment()->getClientEmail(),$orderReference);
         }
     }
 
     // Sends the tickets to the attendee
-    public function sendOrderConfirmationEmail($order, $emailTo) {
+    public function sendOrderConfirmationEmail($order, $emailTo,$orderReference) {
+        $sqlEvent = "SELECT * FROM eventic_order WHERE reference = :ref_id";
+        $paramsEvent = ['ref_id' => $orderReference];
+        $statementEvent = $this->connection->prepare($sqlEvent);
+        $statementEvent->execute($paramsEvent);
+        $event_order = $statementEvent->fetch();
+
+        if (!$event_order) {
+            $this->addFlash('error', $translator->trans('The event order can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $event_order_id = $event_order['id'];
+
+        $sql = "SELECT * FROM eventic_order_element WHERE order_id = :order_id";
+        $params = ['order_id' => $event_order_id];
+        $statement = $this->connection->prepare($sql);
+        $statement->execute($params);
+        $event_order_ele = $statement->fetch();
+
+
+        if (!$event_order_ele) {
+            $this->addFlash('error', $translator->trans('The event order element date can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $event_ticket_id = $event_order_ele['eventticket_id'];
+
+        $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE id = :ticket_id";
+        $params2 = ['ticket_id' => $event_ticket_id];
+        $statement2 = $this->connection->prepare($sql2);
+        $statement2->execute($params2);
+        $event_date_ticket = $statement2->fetch();
+
+        if (!$event_date_ticket) {
+            $this->addFlash('error', $translator->trans('The event ticket can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $event_date_id = $event_date_ticket['eventdate_id'];
+
+        $sql3 = "SELECT * FROM eventic_event_date WHERE id = :date_id";
+        $params3 = ['date_id' => $event_date_id];
+        $statement3 = $this->connection->prepare($sql3);
+        $statement3->execute($params3);
+        $event_date = $statement3->fetch();
+
+        if (!$event_date) {
+            $this->addFlash('error', $translator->trans('The event date can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $link_id = $event_date['meetinglink'];
+
+        $event_id = $event_date['event_id'];
+
+        $sql4 = "SELECT * FROM eventic_event WHERE id = :id";
+        $params4 = ['id' => $event_id];
+        $statement4 = $this->connection->prepare($sql4);
+        $statement4->execute($params4);
+        $one_event = $statement4->fetch();
+
+        if (!$one_event) {
+            $this->addFlash('error', $translator->trans('The event can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+
         $pdfOptions = new Options();
         //$pdfOptions->set('defaultFont', 'Arial');
         $dompdf = new Dompdf($pdfOptions);
         $html = $this->templating->render('Dashboard/Shared/Order/ticket-pdf.html.twig', [
             'order' => $order,
-            'eventDateTicketReference' => 'all'
+            'eventDateTicketReference' => 'all',
+            'link' => $link,
         ]);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');

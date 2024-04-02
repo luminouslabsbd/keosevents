@@ -60,6 +60,12 @@
                 margin: 0 auto;
             }
 
+            .clearfix::after {
+                content: "";
+                clear: both;
+                display: table;
+            }
+
         </style>
     </head>
     <body>
@@ -113,15 +119,20 @@
                                             {% else %}
                                                 {{ "Online"|trans({}, "messages", locale) }}
                                                 <br>
-                                                {{ link |trans({}, "messages", locale) }}
+                                                {% if link is not empty %}
+                                                    {{ link|trans({}, "messages", locale) }}
+                                                {% endif %}
                                             {% endif %}
                                         </h6>
-                                        {% if not orderElement.eventticket.eventdate.venue %}
-                                            <a href="https://{{ link }}" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
-                                        {% endif %}
-                                        {% if orderElement.eventticket.eventdate.event.organizer %}
-                                            <h6><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
+
+                                        <div class="clearfix" style="width: 100%">
+                                            {% if orderElement.eventticket.eventdate.event.organizer %}
+                                                <h6 style="float: left;"><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
                                             {% endif %}
+                                            {% if not orderElement.eventticket.eventdate.venue %}
+                                                <a href="{{ link }}" style="float: right; background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td width="50%">
                                         <h3>

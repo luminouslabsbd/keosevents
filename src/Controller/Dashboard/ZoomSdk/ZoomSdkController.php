@@ -22,10 +22,12 @@ class ZoomSdkController extends Controller
         $this->addFlash('error', $translator->trans('The event can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $event = $one_event['id'];
+    $event_id = $one_event['id'];
+
+    $org_id = $one_event['organizer_id'];
 
     $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
-    $params = ['id' => $event];
+    $params = ['id' => $event_id];
     $statement = $connection->prepare($sql);
     $statement->execute($params);
     $event_date = $statement->fetch();
@@ -48,8 +50,23 @@ class ZoomSdkController extends Controller
         return $this->redirect($request->headers->get('referer'));
     }
 
-    $user    = $this->getUser();
-    $userId  = $user->getId();
+    $sql7 = "SELECT * FROM eventic_organizer WHERE id = :id";
+    $params7 = ['id' => $org_id];
+    $statement7 = $connection->prepare($sql7);
+    $statement7->execute($params7);
+    $organizer = $statement7->fetch();
+
+    if (!$organizer) {
+        $this->addFlash('error', $translator->trans('The event Organizer can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    $userId = $organizer['user_id'];
+   
+    if (!$userId) {
+      $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
+      return $this->redirect($request->headers->get('referer'));
+  }
 
     $sql6 = "SELECT * FROM api_settings WHERE user_id = :user_id";
     $params6 = ['user_id' => $userId];
