@@ -22,12 +22,12 @@ class ZoomSdkController extends Controller
         $this->addFlash('error', $translator->trans('The event can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $event = $one_event['id'];
+    $event_id = $one_event['id'];
 
     $org_id = $one_event['organizer_id'];
 
     $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
-    $params = ['id' => $event];
+    $params = ['id' => $event_id];
     $statement = $connection->prepare($sql);
     $statement->execute($params);
     $event_date = $statement->fetch();
