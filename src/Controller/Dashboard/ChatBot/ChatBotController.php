@@ -27,24 +27,25 @@ class ChatBotController extends Controller
         $this->client = $client;
     }
 
-    public function chatbot_train_text()
+    public function chatbot_train_text(TranslatorInterface $translator)
     {
         $bots = [];
         try {
             $response = $this->client->request("GET", $_ENV['CHAT_BOT_TEMPLATE_LIST']);
             $bots = $response->toArray();
         } catch (\Exception $exception) {
-            
+            $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
         }
+
         return $this->render('Dashboard/ChatBot/train-text-bot.html.twig', [
             'bots' => $bots,
         ]);
-      
-        dd('Not found');
+        
     }
-    public function chatbot_train_attachment()
+    public function chatbot_train_attachment(TranslatorInterface $translator)
     {
         $bots = [];
+        $chat_bot_lists = [];
         $user = $this->getUser();
         $authId = $user->getId();
         try {
@@ -53,15 +54,16 @@ class ChatBotController extends Controller
 
             $response = $this->client->request("GET", $_ENV['CHAT_BOT_LIST'].'/'. $authId);
             $chat_bot_lists = $response->toArray();
+
         } catch (\Exception $exception) {
-            dd($exception->getMessage());
+            $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
         }
 
         return $this->render('Dashboard/ChatBot/train-attachment-bot.html.twig', [
             'bots' => $bots,
             'chat_bot_lists' => $chat_bot_lists,
         ]);
-        dd('Not found');
+
     }
 
     public function chatbot_train_list()
@@ -121,7 +123,7 @@ class ChatBotController extends Controller
 
                 $this->addFlash('success', $responseData['chatbotName'].$translator->trans(' chatbot has been created successfully'));
             } catch (RequestException $e) {
-                dd($e->getMessage());
+                $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
             }
         }else{
             $this->addFlash('error', $translator->trans('Please insert file'));
@@ -138,6 +140,10 @@ class ChatBotController extends Controller
             $user = $this->getUser();
             $authId = $user->getId();
 
+            // api
+            $response = $client->request("DELETE", $_ENV['CHAT_BOT_LIST_DELETE'] . "?userId=$authId&chatbotId=$chatbotId");
+
+            // database
             $sql = "DELETE FROM chatbot_lists WHERE org_id = :org_id AND chatbot_id = :chatbot_id";
             $params = [
                 'org_id' => $authId,
@@ -145,19 +151,10 @@ class ChatBotController extends Controller
             ];
             $statement = $entityManager->getConnection()->prepare($sql);
             $statement->execute($params);
-
-//             // Optionally, check if any rows were affected
-//             $rowCount = $statement->rowCount();
-//             if ($rowCount > 0) {
-//                 dd("Row deleted successfully.");
-//             } else {
-//                 dd("Row not found.");
-//             }
-// dd($statement);
-            $response = $client->request("DELETE", $_ENV['CHAT_BOT_LIST_DELETE'] . "?userId=$authId&chatbotId=$chatbotId");
+            
             $this->addFlash('success', $translator->trans('Chatbot deleted successfully'));
         } catch (RequestException $e) {
-            dd($e->getMessage());
+            $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
         }
         $referrer = $request->headers->get('referer');
         return $this->redirect($referrer);
