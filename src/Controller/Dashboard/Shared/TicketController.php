@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Swift_Mailer;
 use Twig\Environment;
 use Doctrine\DBAL\Connection;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 
 class TicketController extends Controller
@@ -29,6 +30,13 @@ class TicketController extends Controller
         return $this->redirect($request->headers->get('referer'));
     }
 
+    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+
+    if (!$link) {
+        $this->addFlash('error', $translator->trans('The event Link can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
     $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
     $params = ['id' => $event];
     $statement = $connection->prepare($sql);
@@ -40,20 +48,6 @@ class TicketController extends Controller
         return $this->redirect($request->headers->get('referer'));
     }
     $event_date_id = $event_date['id'];
-    $link_id = $event_date['meetinglink'];
-
-    $sql5 = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
-    $params5 = ['id' => $link_id];
-    $statement5 = $connection->prepare($sql5);
-    $statement5->execute($params5);
-    $event_meeting = $statement5->fetch();
-
-    if (!$event_meeting) {
-        $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-    $link = $event_meeting['join_url'];
-    
 
     $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
     $params2 = ['id' => $event_date_id];
@@ -109,95 +103,124 @@ class TicketController extends Controller
         'orders' => $order,
         'eventDateTicketReference' => $eventDateTicketReference,
         'link' => $link,
+        'event_id' => $event
+
     ]);
 }
 
 
     /**
-     * @Route("/mail-ticket/test", name="mail_server_test", methods="GET|POST")
+     * @Route("/mail-ticket/send", name="mail_server_test", methods="GET|POST")
      */
     public function mailServerTest(Request $request, AppServices $services, Swift_Mailer $mailer, Environment $templating, TranslatorInterface $translator, Connection $connection)
-{
-    // Get the 'id' parameter from the URL
-    $ref_id = $request->query->get('id');
+    {
+        // Get the 'id' parameter from the URL
+        $id = $request->query->get('event_id');
+        $ref_id = $request->query->get('ref_id');
 
-    $sql = "SELECT * FROM eventic_order_ticket WHERE reference = :ref_id";
-    $params = ['ref_id' => $ref_id];
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
-    $order = $statement->fetch();
+        $sqlEvent = "SELECT * FROM eventic_event WHERE id = :id";
+        $paramsEvent = ['id' => $id];
+        $statementEvent = $connection->prepare($sqlEvent);
+        $statementEvent->execute($paramsEvent);
+        $one_event = $statementEvent->fetch();
 
-    if (!$order) {
-        $this->addFlash('error', $translator->trans('The order ticket can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-
-    $orderelement_id = $order['orderelement_id'];
-
-    $sql1 = "SELECT * FROM eventic_order_element WHERE id = :orderelement_id";
-    $params1 = ['orderelement_id' => $orderelement_id];
-    $statement1 = $connection->prepare($sql1);
-    $statement1->execute($params1);
-    $order_element = $statement1->fetch();
-
-    if (!$order_element) {
-        $this->addFlash('error', $translator->trans('The order element can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-
-    $order_id = $order_element['order_id'];
-
-    $sql2 = "SELECT * FROM eventic_order WHERE id = :order_id";
-    $params2 = ['order_id' => $order_id];
-    $statement2 = $connection->prepare($sql2);
-    $statement2->execute($params2);
-    $order = $statement2->fetch();
-
-    if (!$order) {
-        $this->addFlash('error', $translator->trans('The order can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-
-    $user_id = $order['user_id'];
-
-    $sql3 = "SELECT * FROM eventic_user WHERE id = :user_id";
-    $params3 = ['user_id' => $user_id];
-    $statement3 = $connection->prepare($sql3);
-    $statement3->execute($params3);
-    $user = $statement3->fetch();
-
-    if (!$user) {
-        $this->addFlash('error', $translator->trans('The user can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-
-    $orders = $services->getOrders(array("reference" => $order['reference']))->getQuery()->getOneOrNullResult();
-    if (!$orders) {
-        $this->addFlash('error', $translator->trans('The order can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-    $eventDateTicketReference = $request->query->get('event', 'all');
-
-    // Send Email
-    $email = new \Swift_Message($translator->trans("Mail server test email"));
-    $email->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
-        ->setTo($user['email'])
-        ->setBody($templating->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
-            'order' => $orders,
-            'eventDateTicketReference' => $eventDateTicketReference,
-        ]), 'text/html');
-    try {
-        $result = $mailer->send($email);
-        if ($result == 0) {
-            $this->addFlash('danger', $translator->trans("The email could not be sent"));
-        } else {
-            $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $user['email']);
+        if (!$one_event) {
+            $this->addFlash('error', $translator->trans('The event can not be found'));
+            return $this->redirect($request->headers->get('referer'));
         }
-    } catch (\Exception $e) {
-        $this->addFlash('danger', $translator->trans("The email could not be sent"));
+
+        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+
+        if (!$link) {
+            $this->addFlash('error', $translator->trans('The event Link can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $sql = "SELECT * FROM eventic_order_ticket WHERE reference = :ref_id";
+        $params = ['ref_id' => $ref_id];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $order = $statement->fetch();
+
+        if (!$order) {
+            $this->addFlash('error', $translator->trans('The order ticket can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $orderelement_id = $order['orderelement_id'];
+
+        $sql1 = "SELECT * FROM eventic_order_element WHERE id = :orderelement_id";
+        $params1 = ['orderelement_id' => $orderelement_id];
+        $statement1 = $connection->prepare($sql1);
+        $statement1->execute($params1);
+        $order_element = $statement1->fetch();
+
+        if (!$order_element) {
+            $this->addFlash('error', $translator->trans('The order element can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $order_id = $order_element['order_id'];
+
+        $sql2 = "SELECT * FROM eventic_order WHERE id = :order_id";
+        $params2 = ['order_id' => $order_id];
+        $statement2 = $connection->prepare($sql2);
+        $statement2->execute($params2);
+        $order = $statement2->fetch();
+
+        if (!$order) {
+            $this->addFlash('error', $translator->trans('The order can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $user_id = $order['user_id'];
+
+        $sql3 = "SELECT * FROM eventic_user WHERE id = :user_id";
+        $params3 = ['user_id' => $user_id];
+        $statement3 = $connection->prepare($sql3);
+        $statement3->execute($params3);
+        $user = $statement3->fetch();
+
+        if (!$user) {
+            $this->addFlash('error', $translator->trans('The user can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $orders = $services->getOrders(array("reference" => $order['reference']))->getQuery()->getOneOrNullResult();
+        if (!$orders) {
+            $this->addFlash('error', $translator->trans('The order can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+        $eventDateTicketReference = $request->query->get('event', 'all');
+
+        // return $this->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
+        //     'order' => $orders,
+        //     'eventDateTicketReference' => $eventDateTicketReference,
+        //     'link' => $link,
+        // ]);
+
+
+        // Send Email
+        $email = new \Swift_Message($translator->trans("Mail server test email"));
+        $email->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
+            ->setTo($user['email'])
+            ->setBody($templating->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
+                'order' => $orders,
+                'eventDateTicketReference' => $eventDateTicketReference,
+                'link' => $link,
+            ]), 'text/html');
+        try {
+            $result = $mailer->send($email);
+            if ($result == 0) {
+                $this->addFlash('danger', $translator->trans("The email could not be sent"));
+            } else {
+                $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $user['email']);
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('danger', $translator->trans("The email could not be sent"));
+        }
+        return $this->redirect($request->headers->get('referer'));
     }
-    return $this->redirect($request->headers->get('referer'));
-}
 
 
 public function sendTicketCsv(Request $request, AppServices $services, TranslatorInterface $translator, Connection $connection, Swift_Mailer $mailer, Environment $templating, $event = null)
@@ -214,6 +237,14 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
     }
 
     $ref_id = $event_info['reference'];
+
+    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$ref_id;
+
+    if (!$link) {
+        $this->addFlash('error', $translator->trans('The event Link can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
     $user_id = $event_info['organizer_id'];
     
     $sql2 = "SELECT * FROM eventic_user WHERE organizer_id = :id";
@@ -249,20 +280,6 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         $this->addFlash('error', $translator->trans('The event date can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-
-    $link_id = $event_date['meetinglink'];
-
-    $sql5 = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
-    $params5 = ['id' => $link_id];
-    $statement5 = $connection->prepare($sql5);
-    $statement5->execute($params5);
-    $event_meeting = $statement5->fetch();
-
-    if (!$event_meeting) {
-        $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
-    $link = $event_meeting['join_url'];
 
     $sql6 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
     $params6 = ['id' => $event_date_id];

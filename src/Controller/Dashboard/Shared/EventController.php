@@ -13,6 +13,7 @@ use App\Form\EventType;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -72,47 +73,48 @@ class EventController extends Controller {
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
-
-                // event_mails table save data
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
-                
-                foreach ($event->getImages() as $image) {
-                    $image->setEvent($event);
-                }
-                foreach ($event->getEventdates() as $eventdate) {
-                    $eventdate->setEvent($event);
-                    if (!$slug || !$eventdate->getReference()) {
-                        $eventdate->setReference($services->generateReference(10));
+                $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
+                if ($csv_upload) {
+                    foreach ($event->getImages() as $image) {
+                        $image->setEvent($event);
                     }
-                    foreach ($eventdate->getTickets() as $eventticket) {
-                        $eventticket->setEventdate($eventdate);
-                        if (!$slug || !$eventticket->getReference()) {
-                            $eventticket->setReference($services->generateReference(10));
+                    foreach ($event->getEventdates() as $eventdate) {
+                        $eventdate->setEvent($event);
+                        if (!$slug || !$eventdate->getReference()) {
+                            $eventdate->setReference($services->generateReference(10));
+                        }
+                        foreach ($eventdate->getTickets() as $eventticket) {
+                            $eventticket->setEventdate($eventdate);
+                            if (!$slug || !$eventticket->getReference()) {
+                                $eventticket->setReference($services->generateReference(10));
+                            }
                         }
                     }
-                }
-                if (!$slug) {
-                    $this->event_mails_data_save($event->getReference(),$input, $file, $entityManager);
-                    $event->setOrganizer($this->getUser()->getOrganizer());
-                    $event->setReference($services->generateReference(10));
-                    $this->addFlash('success', $translator->trans('The event has been successfully created'));
+                    if (!$slug) {
+                        $event->setOrganizer($this->getUser()->getOrganizer());
+                        $rr = $event->setReference($services->generateReference(10));
+                        $this->event_mails_data_save($rr->getReference(), $input, $file, $entityManager);
+                        $this->addFlash('success', $translator->trans('The event has been successfully created'));
+                    } else {
+                        $this->addFlash('success', $translator->trans('The event has been successfully updated'));
+                    }
+                    $em->persist($event);
+                    $em->flush();
+                    if ($authChecker->isGranted('ROLE_ORGANIZER')) {
+                        return $this->redirectToRoute("dashboard_organizer_event");
+                    } elseif ($authChecker->isGranted('ROLE_ADMINISTRATOR')) {
+                        return $this->redirectToRoute("dashboard_administrator_event");
+                    }
                 } else {
-                    $this->addFlash('success', $translator->trans('The event has been successfully updated'));
+                    $this->addFlash('error', $translator->trans('Must be upload a valid CSV file. Download and show demo CSV'));
                 }
-                $em->persist($event);
-                $em->flush();
-                if ($authChecker->isGranted('ROLE_ORGANIZER')) {
-                    return $this->redirectToRoute("dashboard_organizer_event");
-                } elseif ($authChecker->isGranted('ROLE_ADMINISTRATOR')) {
-                    return $this->redirectToRoute("dashboard_administrator_event");
-                }
-
-               
 
             } else {
                 $this->addFlash('error', $translator->trans('The form contains invalid data'));
             }
+            
         }
 
         // organizer list get
@@ -129,60 +131,128 @@ class EventController extends Controller {
     }
 
 
+    public function event_mails_csv_check($event_ref_id,$input, $file, $entityManager)
+    {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                $tmpFilePath = $file['tmp_name'];
+                if ($file['type'] === 'text/csv') {
+
+                    $handle = fopen($tmpFilePath, 'r');
+                    $datas = [];
+                    $headers = fgetcsv($handle);
+                    while (($row = fgetcsv($handle)) !== false) {
+                        if (count($row) !== count($headers)) {
+                            continue;
+                        }
+                        $datas[] = array_combine($headers, $row);
+                    }
+
+                    fclose($handle);
+                    $subscriber_list_id = $input['subscriber_id'];
+                    $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
+                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+                    foreach ($datas as $data) {
+                        $data['name'];
+                        $data['surname'];
+                        $data['email'];
+                        $data['phone_number'];
+                        $data['department'];
+                        $data['city'];
+                        $data['country'];
+                        $data['address'];
+
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
+                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
+                        $params = [
+                            'event_ref_id'       => $event_ref_id,
+                            'send_type'          => $send_type,
+                            'send_chanel'        => $send_chanel,
+                            'subscriber_list_id' => $subscriber_list_id,
+                            'name'               => $data['name'],
+                            'surname'            => $data['surname'],
+                            'email'              => $data['email'],
+                            'phone_number'       => $data['phone_number'],
+                            'department'         => $data['department'],
+                            'city'               => $data['city'],
+                            'country'            => $data['country'],
+                            'address'            => $data['address'],
+                        ];
+
+                        $statement = $entityManager->getConnection()->prepare($sql);
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            } else{
+                return false;
+            }
+        } catch (Exception $e) {
+            return false;
+        }   
+    }
     public function event_mails_data_save($event_ref_id,$input, $file, $entityManager)
     {
-        if ($file['error'] === UPLOAD_ERR_OK) {
-            $tmpFilePath = $file['tmp_name'];
-            if ($file['type'] === 'text/csv') {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                $tmpFilePath = $file['tmp_name'];
+                if ($file['type'] === 'text/csv') {
 
-                $handle = fopen($tmpFilePath, 'r');
-                $datas = [];
-                $headers = fgetcsv($handle);
-                while (($row = fgetcsv($handle)) !== false) {
-                    $datas[] = array_combine($headers, $row);
-                }
-                fclose($handle);
-                $subscriber_list_id = $input['subscriber_id'];
-                $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
-                $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
-                foreach ($datas as $data) {
-                    $data['name'];
-                    $data['surname'];
-                    $data['email'];
-                    $data['phone_number'];
-                    $data['department'];
-                    $data['city'];
-                    $data['country'];
-                    $data['address'];
+                    $handle = fopen($tmpFilePath, 'r');
+                    $datas = [];
+                    $headers = fgetcsv($handle);
+                    while (($row = fgetcsv($handle)) !== false) {
+                        if (count($row) !== count($headers)) {
+                            continue;
+                        }
+                        $datas[] = array_combine($headers, $row);
+                    }
 
-                    $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
+                    fclose($handle);
+                    $subscriber_list_id = $input['subscriber_id'];
+                    $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
+                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+                    foreach ($datas as $data) {
+                        $data['name'];
+                        $data['surname'];
+                        $data['email'];
+                        $data['phone_number'];
+                        $data['department'];
+                        $data['city'];
+                        $data['country'];
+                        $data['address'];
+
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
                     VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
-                    $params = [
-                        'event_ref_id'       => $event_ref_id,
-                        'send_type'          => $send_type,
-                        'send_chanel'        => $send_chanel,
-                        'subscriber_list_id' => $subscriber_list_id,
-                        'name'               => $data['name'],
-                        'surname'            => $data['surname'],
-                        'email'              => $data['email'],
-                        'phone_number'       => $data['phone_number'],
-                        'department'         => $data['department'],
-                        'city'               => $data['city'],
-                        'country'            => $data['country'],
-                        'address'            => $data['address'],
-                    ];
+                        $params = [
+                            'event_ref_id'       => $event_ref_id,
+                            'send_type'          => $send_type,
+                            'send_chanel'        => $send_chanel,
+                            'subscriber_list_id' => $subscriber_list_id,
+                            'name'               => $data['name'],
+                            'surname'            => $data['surname'],
+                            'email'              => $data['email'],
+                            'phone_number'       => $data['phone_number'],
+                            'department'         => $data['department'],
+                            'city'               => $data['city'],
+                            'country'            => $data['country'],
+                            'address'            => $data['address'],
+                        ];
 
-                    $statement = $entityManager->getConnection()->prepare($sql);
-                    $statement->execute($params);
-
+                        $statement = $entityManager->getConnection()->prepare($sql);
+                        $success = $statement->execute($params);
+                    }
+                    return true;
+                } else {
+                    return false;
                 }
-
-            } else {
-                echo 'File is not a CSV.';
+            } else{
+                return false;
             }
-        } else {
-            echo 'File upload failed.';
-        }
+        } catch (Exception $e) {
+            return false;
+        }   
     }
 
     /**

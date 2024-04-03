@@ -33,7 +33,7 @@
                                     <div class="form-group">
                                         <div class="row justify-content-center">
                                             <div class="col-md-1">
-                                                <span  class="btn btn-primary">List</span>
+                                                <span  class="btn btn-primary">List <span class="text-danger">*</span></span>
                                             </div>
                                             <div class="col-md-5">
                                                 <select id="" name="subscriber_id" class="form-control" >
@@ -50,10 +50,14 @@
                                     <div class="form-group">
                                         <div class="row justify-content-center mt-4">
                                             <div class="col-md-6">
-                                                <input class="form-control" type="file" required name="subscriber_file" placeholder="Upload a csv" accept=".csv" />
+                                                <div class="form-group">
+                                                    <label>Upload CSV <span class="text-danger">*</span></label>
+                                                    <input class="form-control" type="file" required name="subscriber_file" placeholder="Upload a csv" accept=".csv" />
+                                                </div>
                                             </div>
                                             <div class="col-md-1">
-                                                <a href="{{path('file_preview_download')}}" class="btn btn-primary">Demo CSV</a>
+                                                
+                                                <a href="{{path('file_preview_download')}}" class="btn btn-primary mt-4">Demo CSV</a>
                                             </div>
                                         </div>
                                     </div>

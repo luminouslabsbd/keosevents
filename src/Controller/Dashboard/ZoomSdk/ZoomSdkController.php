@@ -22,10 +22,12 @@ class ZoomSdkController extends Controller
         $this->addFlash('error', $translator->trans('The event can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
-    $event = $one_event['id'];
+    $event_id = $one_event['id'];
+
+    $org_id = $one_event['organizer_id'];
 
     $sql = "SELECT * FROM eventic_event_date WHERE event_id = :id";
-    $params = ['id' => $event];
+    $params = ['id' => $event_id];
     $statement = $connection->prepare($sql);
     $statement->execute($params);
     $event_date = $statement->fetch();
@@ -47,13 +49,43 @@ class ZoomSdkController extends Controller
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
         return $this->redirect($request->headers->get('referer'));
     }
+
+    $sql7 = "SELECT * FROM eventic_organizer WHERE id = :id";
+    $params7 = ['id' => $org_id];
+    $statement7 = $connection->prepare($sql7);
+    $statement7->execute($params7);
+    $organizer = $statement7->fetch();
+
+    if (!$organizer) {
+        $this->addFlash('error', $translator->trans('The event Organizer can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
+
+    $userId = $organizer['user_id'];
+   
+    if (!$userId) {
+      $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
+      return $this->redirect($request->headers->get('referer'));
+  }
+
+    $sql6 = "SELECT * FROM api_settings WHERE user_id = :user_id";
+    $params6 = ['user_id' => $userId];
+    $statement6 = $connection->prepare($sql6);
+    $statement6->execute($params6);
+    $api_setting = $statement6->fetch();
+
+    if (!$api_setting) {
+        $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
+        return $this->redirect($request->headers->get('referer'));
+    }
     
     
       return $this->render('Dashboard/ZoomSdk/zoom-sdk.html.twig',[
         'nodeServer' => $_ENV['NODE_SERVER'],
         'quizApiUrl' => $_ENV['QUIZ_API'],
         'zoomAuthEndPoint' => $_ENV['ZOOM_AUTH_END_POINT'],
-        'sdkKey' => $_ENV['SDK_KEY'],
+        'leaveUrl' => $_ENV['MAIN_DOMAIN'],
+        'sdkKey' => $api_setting['sdk_key'],
         'event_meeting' => $event_meeting
       ]);
 

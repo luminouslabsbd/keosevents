@@ -30,9 +30,19 @@ class MainController extends Controller {
         $ticketsSalesByDateLineChart->getOptions()->setCurveType('function');
         $ticketsSalesByDateLineChart->getOptions()->setLineWidth(2);
         $ticketsSalesByDateLineChart->getOptions()->getLegend()->setPosition('none');
+        $params = [
+            'organizer' => 'tanha',
+            'count' => 1,
+            'published' => 1,
+            'elapsed' => 'all'
+        ];
+        $publishedEventCount =$services->getEvents($params)->getQuery()->getSingleScalarResult();
+
+        
 
         return $this->render('Dashboard/Organizer/index.html.twig', [
-                    'ticketsSalesByDateLineChart' => $ticketsSalesByDateLineChart
+                    'ticketsSalesByDateLineChart' => $ticketsSalesByDateLineChart,
+                    'publishedEventCount' => $publishedEventCount
         ]);
     }
 

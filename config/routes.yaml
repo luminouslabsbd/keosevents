@@ -168,22 +168,35 @@ google_api_setting:
     path: /google/api/setting
     controller: App\Controller\Dashboard\Organizer\AccountController::google_api_setting
 
-
-
-chatbot_train:
-    path: /chatbot-train/{type}
-    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::createChatBotTrain'
+chatbot_train_text:
+    path: /chatbot_train_text
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_text'
     methods: ['GET']
 
-chatbot_train_store:
-    path: /chatbot-train-store/{type}
-    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::createChatBotTrainStore'
+chatbot_train_attachment:
+    path: /chatbot_train_attachment
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_attachment'
+    methods: ['GET']
+
+chatbot_train_list:
+    path: /chatbot_train_list
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_list'
+    methods: ['GET']
+
+chatbot_train_list_store:
+    path: /chatbot_train_list_store
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_list_store'
     methods: ['POST']
 
-# trainBot:
-#     path: /trainBot/
-#     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::trainBot'
-#     methods: ['POST']
+chatbot_train_attachment_store:
+    path: /chatbot_train_attachment_store
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_attachment_store'
+    methods: ['POST']
+
+delete_chatbot_list:
+    path: /delete_chatbot_list/{chatbotId}
+    controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::delete_chatbot_list'
+    methods: ['GET']
 
 zoom_sdk_player:
     path: /join_event_meeting/{reference?}
