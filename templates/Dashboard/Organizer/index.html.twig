@@ -35,7 +35,7 @@
                                 <div class="col-md-3 col-sm-6 col-12 p-1">
                                     <div class="bg-primary rounded p-4 text-center text-white position-relative counter-box">
                                         <i class="fas fa-calendar-alt"></i>
-                                        <h4>{{ services.getEvents({"organizer": app.user.organizer.slug, "count": true, "published": true, "elapsed": "all"}).getQuery().getSingleScalarResult() }}</h4>
+                                        <h4>{{ publishedEventCount }}</h4>
                                         <h5 class="mb-0">{{ "Published events"|trans }}</h5>
                                     </div>
                                 </div>
