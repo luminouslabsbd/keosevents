@@ -75,7 +75,9 @@ class EventController extends Controller {
             if ($form->isValid()) {
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
-                $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
+                if (!$slug) {
+                    $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
+                }
                 if ($csv_upload) {
                     foreach ($event->getImages() as $image) {
                         $image->setEvent($event);
