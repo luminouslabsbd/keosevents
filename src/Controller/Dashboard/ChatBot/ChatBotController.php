@@ -31,7 +31,7 @@ class ChatBotController extends Controller
     {
         $bots = [];
         try {
-            $response = $this->client->request("GET", $_ENV['CHAT_BOT_TEMPLATE_LIST']);
+            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots');
             $bots = $response->toArray();
         } catch (\Exception $exception) {
             $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
@@ -49,10 +49,10 @@ class ChatBotController extends Controller
         $user = $this->getUser();
         $authId = $user->getId();
         try {
-            $response = $this->client->request("GET", $_ENV['CHAT_BOT_TEMPLATE_LIST']);
+            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots');
             $bots = $response->toArray();
 
-            $response = $this->client->request("GET", $_ENV['CHAT_BOT_LIST'].'/'. $authId);
+            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/user-chatbots/'. $authId);
             $chat_bot_lists = $response->toArray();
 
         } catch (\Exception $exception) {
@@ -101,7 +101,7 @@ class ChatBotController extends Controller
                 $user = $this->getUser();
                 $authId = $user->getId();
 
-                $response = $client->request("POST", $_ENV['CHAT_BOT_TRAIN_ATTACH'].'/'. $authId, $options);
+                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL']. '/create-chatbot-weavi/'. $authId, $options);
                 $body = $response->getBody()->getContents();
                 $responseData = json_decode($body, true);
 
@@ -141,7 +141,7 @@ class ChatBotController extends Controller
             $authId = $user->getId();
 
             // api
-            $response = $client->request("DELETE", $_ENV['CHAT_BOT_LIST_DELETE'] . "?userId=$authId&chatbotId=$chatbotId");
+            $response = $client->request("DELETE", $_ENV['CHATBOT_BASEURL'] . "/delete-chatbot?userId=$authId&chatbotId=$chatbotId");
 
             // database
             $sql = "DELETE FROM chatbot_lists WHERE org_id = :org_id AND chatbot_id = :chatbot_id";
