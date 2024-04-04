@@ -17,6 +17,22 @@
             right: 0px;
             top: 0px;
         }
+
+        .trained-chatbot-list-drop{
+            padding-right: 18px !important;
+            padding-left: 18px !important;
+            background-color: #f1f3f7;
+            border-radius: 5px;
+            padding-top: 13px;
+            color: #8898aa;
+            padding-bottom: 13px;
+        }
+
+        .dropdown-item{
+            display: flex;
+            justify-content: space-between;
+            gap: 3px;
+        }
     </style>
 {% endblock %}
 
@@ -104,8 +120,8 @@
                                             <div class="">
                                                 <h5>Trained Chatbot List</h5>
                                                 <ul class="navbar-nav mr-auto">
-                                                    <li class="nav-item dropdown">
-                                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <li class="nav-item dropdown " >
+                                                        <a class="nav-link dropdown-toggle trained-chatbot-list-drop" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                             Chatbot List
                                                         </a>
                                                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
