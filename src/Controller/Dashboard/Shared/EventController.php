@@ -19,13 +19,15 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 
-class EventController extends Controller {
+class EventController extends Controller
+{
 
     /**
      * @Route("/administrator/manage-events", name="dashboard_administrator_event", methods="GET")
      * @Route("/organizer/my-events", name="dashboard_organizer_event", methods="GET")
      */
-    public function index(Request $request, PaginatorInterface $paginator, AppServices $services, AuthorizationCheckerInterface $authChecker) {
+    public function index(Request $request, PaginatorInterface $paginator, AppServices $services, AuthorizationCheckerInterface $authChecker)
+    {
         $slug = ($request->query->get('slug')) == "" ? "all" : $request->query->get('slug');
         $category = ($request->query->get('category')) == "" ? "all" : $request->query->get('category');
         $venue = ($request->query->get('venue')) == "" ? "all" : $request->query->get('venue');
@@ -40,7 +42,7 @@ class EventController extends Controller {
         $events = $paginator->paginate($services->getEvents(array("slug" => $slug, "category" => $category, "venue" => $venue, "elapsed" => $elapsed, "published" => $published, "organizer" => $organizer, "sort" => "startdate", "organizerEnabled" => "all", "sort" => "e.createdAt", "order" => "DESC"))->getQuery(), $request->query->getInt('page', 1), 10, array('wrap-queries' => true));
 
         return $this->render('Dashboard/Shared/Event/index.html.twig', [
-                    'events' => $events,
+            'events' => $events,
         ]);
     }
 
@@ -48,8 +50,9 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/add", name="dashboard_organizer_event_add", methods="GET|POST")
      * @Route("/organizer/my-events/{slug}/edit", name="dashboard_organizer_event_edit", methods="GET|POST")
      */
-    public function addedit(Request $request, AppServices $services, TranslatorInterface $translator, $slug = null, AuthorizationCheckerInterface $authChecker, EntityManagerInterface $entityManager) {
-   
+    public function addedit(Request $request, AppServices $services, TranslatorInterface $translator, $slug = null, AuthorizationCheckerInterface $authChecker, EntityManagerInterface $entityManager)
+    {
+
         $em = $this->getDoctrine()->getManager();
 
         $organizer = "all";
@@ -78,7 +81,7 @@ class EventController extends Controller {
                 if (!$slug) {
                     $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
                 }
-                if ($csv_upload) {
+                if (isset($slug) || $csv_upload) {
                     foreach ($event->getImages() as $image) {
                         $image->setEvent($event);
                     }
@@ -110,13 +113,13 @@ class EventController extends Controller {
                         return $this->redirectToRoute("dashboard_administrator_event");
                     }
                 } else {
-                    $this->addFlash('error', $translator->trans('Must be upload a valid CSV file. Download and show demo CSV'));
+                    if (!$slug) {
+                        $this->addFlash('error', $translator->trans('Must be upload a valid CSV file. Download and show demo CSV'));
+                    }
                 }
-
             } else {
                 $this->addFlash('error', $translator->trans('The form contains invalid data'));
             }
-            
         }
 
         // organizer list get
@@ -133,7 +136,7 @@ class EventController extends Controller {
     }
 
 
-    public function event_mails_csv_check($event_ref_id,$input, $file, $entityManager)
+    public function event_mails_csv_check($event_ref_id, $input, $file, $entityManager)
     {
         try {
             if ($file['error'] === UPLOAD_ERR_OK) {
@@ -187,14 +190,14 @@ class EventController extends Controller {
                 } else {
                     return false;
                 }
-            } else{
+            } else {
                 return false;
             }
         } catch (Exception $e) {
             return false;
-        }   
+        }
     }
-    public function event_mails_data_save($event_ref_id,$input, $file, $entityManager)
+    public function event_mails_data_save($event_ref_id, $input, $file, $entityManager)
     {
         try {
             if ($file['error'] === UPLOAD_ERR_OK) {
@@ -249,12 +252,12 @@ class EventController extends Controller {
                 } else {
                     return false;
                 }
-            } else{
+            } else {
                 return false;
             }
         } catch (Exception $e) {
             return false;
-        }   
+        }
     }
 
     /**
@@ -263,7 +266,8 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/{slug}/delete-permanently", name="dashboard_organizer_event_delete_permanently", methods="GET")
      * @Route("/organizer/my-events/{slug}/delete", name="dashboard_organizer_event_delete", methods="GET")
      */
-    public function delete(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function delete(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
             $organizer = $this->getUser()->getOrganizer()->getSlug();
@@ -293,7 +297,8 @@ class EventController extends Controller {
     /**
      * @Route("/administrator/manage-events/{slug}/restore", name="dashboard_administrator_event_restore", methods="GET")
      */
-    public function restore($slug, Request $request, TranslatorInterface $translator, AppServices $services) {
+    public function restore($slug, Request $request, TranslatorInterface $translator, AppServices $services)
+    {
 
         $event = $services->getEvents(array("slug" => $slug, "published" => "all", "elapsed" => "all", "organizer" => "all", "organizerEnabled" => "all"))->getQuery()->getOneOrNullResult();
         if (!$event) {
@@ -313,7 +318,8 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/{slug}/publish", name="dashboard_organizer_event_publish", methods="GET")
      * @Route("/organizer/my-events/{slug}/draft", name="dashboard_organizer_event_draft", methods="GET")
      */
-    public function showhide(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function showhide(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
 
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
@@ -342,7 +348,8 @@ class EventController extends Controller {
      * @Route("/administrator/manage-events/{slug}/details", name="dashboard_administrator_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      * @Route("/organizer/my-events/{slug}/details", name="dashboard_organizer_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      */
-    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
 
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
@@ -354,7 +361,7 @@ class EventController extends Controller {
             return new Response($translator->trans('The event can not be found'));
         }
         return $this->render('Dashboard/Shared/Event/details.html.twig', [
-                    'event' => $event,
+            'event' => $event,
         ]);
     }
 
@@ -391,12 +398,5 @@ class EventController extends Controller {
         $response = new BinaryFileResponse($filePath);
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, basename($filePath));
         return $response;
-
     }
-
-
-
-
-
-
 }
