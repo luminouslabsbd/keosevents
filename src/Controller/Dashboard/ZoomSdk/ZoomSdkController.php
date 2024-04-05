@@ -6,12 +6,16 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ZoomSdkController extends Controller
 {
   public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator, $reference)
 
   {
+
+    $ErrorBackUrl = $_ENV['MAIN_DOMAIN'].'en/dashboard/attendee/my-tickets';
+
     $sqlEvent = "SELECT * FROM eventic_event WHERE reference = :reference";
     $paramsEvent = ['reference' => $reference];
     $statementEvent = $connection->prepare($sqlEvent);
@@ -20,7 +24,7 @@ class ZoomSdkController extends Controller
 
     if (!$one_event) {
         $this->addFlash('error', $translator->trans('The event can not be found'));
-        return $this->redirect($request->headers->get('referer'));
+        return new RedirectResponse($ErrorBackUrl);
     }
     $event_id = $one_event['id'];
 
@@ -34,7 +38,7 @@ class ZoomSdkController extends Controller
 
     if (!$event_date) {
         $this->addFlash('error', $translator->trans('The event date can not be found'));
-        return $this->redirect($request->headers->get('referer'));
+        return new RedirectResponse($ErrorBackUrl);
     }
 
     $link_id = $event_date['meetinglink'];
@@ -47,7 +51,7 @@ class ZoomSdkController extends Controller
 
     if (!$event_meeting) {
         $this->addFlash('error', $translator->trans('The event Meeting can not be found'));
-        return $this->redirect($request->headers->get('referer'));
+        return new RedirectResponse($ErrorBackUrl);
     }
 
     $sql7 = "SELECT * FROM eventic_organizer WHERE id = :id";
@@ -58,14 +62,14 @@ class ZoomSdkController extends Controller
 
     if (!$organizer) {
         $this->addFlash('error', $translator->trans('The event Organizer can not be found'));
-        return $this->redirect($request->headers->get('referer'));
+        return new RedirectResponse($ErrorBackUrl);
     }
 
     $userId = $organizer['user_id'];
    
     if (!$userId) {
       $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
-      return $this->redirect($request->headers->get('referer'));
+      return new RedirectResponse($ErrorBackUrl);
   }
 
     $sql6 = "SELECT * FROM api_settings WHERE user_id = :user_id";
@@ -76,7 +80,7 @@ class ZoomSdkController extends Controller
 
     if (!$api_setting) {
         $this->addFlash('error', $translator->trans('The event Meeting Credential can not be found'));
-        return $this->redirect($request->headers->get('referer'));
+        return new RedirectResponse($ErrorBackUrl);
     }
     
     
