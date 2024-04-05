@@ -11,7 +11,7 @@ use App\Entity\Scanner;
 use App\Form\ScannerType;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class ScannerController extends Controller
+class ScannerControllerBackup extends Controller
 {
 
     /**
