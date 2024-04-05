@@ -13,18 +13,21 @@ use App\Form\EventType;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 
-class EventController extends Controller {
+class EventController extends Controller
+{
 
     /**
      * @Route("/administrator/manage-events", name="dashboard_administrator_event", methods="GET")
      * @Route("/organizer/my-events", name="dashboard_organizer_event", methods="GET")
      */
-    public function index(Request $request, PaginatorInterface $paginator, AppServices $services, AuthorizationCheckerInterface $authChecker) {
+    public function index(Request $request, PaginatorInterface $paginator, AppServices $services, AuthorizationCheckerInterface $authChecker)
+    {
         $slug = ($request->query->get('slug')) == "" ? "all" : $request->query->get('slug');
         $category = ($request->query->get('category')) == "" ? "all" : $request->query->get('category');
         $venue = ($request->query->get('venue')) == "" ? "all" : $request->query->get('venue');
@@ -39,7 +42,7 @@ class EventController extends Controller {
         $events = $paginator->paginate($services->getEvents(array("slug" => $slug, "category" => $category, "venue" => $venue, "elapsed" => $elapsed, "published" => $published, "organizer" => $organizer, "sort" => "startdate", "organizerEnabled" => "all", "sort" => "e.createdAt", "order" => "DESC"))->getQuery(), $request->query->getInt('page', 1), 10, array('wrap-queries' => true));
 
         return $this->render('Dashboard/Shared/Event/index.html.twig', [
-                    'events' => $events,
+            'events' => $events,
         ]);
     }
 
@@ -47,8 +50,9 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/add", name="dashboard_organizer_event_add", methods="GET|POST")
      * @Route("/organizer/my-events/{slug}/edit", name="dashboard_organizer_event_edit", methods="GET|POST")
      */
-    public function addedit(Request $request, AppServices $services, TranslatorInterface $translator, $slug = null, AuthorizationCheckerInterface $authChecker, EntityManagerInterface $entityManager) {
-   
+    public function addedit(Request $request, AppServices $services, TranslatorInterface $translator, $slug = null, AuthorizationCheckerInterface $authChecker, EntityManagerInterface $entityManager)
+    {
+
         $em = $this->getDoctrine()->getManager();
 
         $organizer = "all";
@@ -72,44 +76,47 @@ class EventController extends Controller {
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
-
-                // event_mails table save data
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
-                
-                foreach ($event->getImages() as $image) {
-                    $image->setEvent($event);
+                if (!$slug) {
+                    $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
                 }
-                foreach ($event->getEventdates() as $eventdate) {
-                    $eventdate->setEvent($event);
-                    if (!$slug || !$eventdate->getReference()) {
-                        $eventdate->setReference($services->generateReference(10));
+                if (isset($slug) || $csv_upload) {
+                    foreach ($event->getImages() as $image) {
+                        $image->setEvent($event);
                     }
-                    foreach ($eventdate->getTickets() as $eventticket) {
-                        $eventticket->setEventdate($eventdate);
-                        if (!$slug || !$eventticket->getReference()) {
-                            $eventticket->setReference($services->generateReference(10));
+                    foreach ($event->getEventdates() as $eventdate) {
+                        $eventdate->setEvent($event);
+                        if (!$slug || !$eventdate->getReference()) {
+                            $eventdate->setReference($services->generateReference(10));
+                        }
+                        foreach ($eventdate->getTickets() as $eventticket) {
+                            $eventticket->setEventdate($eventdate);
+                            if (!$slug || !$eventticket->getReference()) {
+                                $eventticket->setReference($services->generateReference(10));
+                            }
                         }
                     }
-                }
-                if (!$slug) {
-                    $this->event_mails_data_save($event->getReference(),$input, $file, $entityManager);
-                    $event->setOrganizer($this->getUser()->getOrganizer());
-                    $event->setReference($services->generateReference(10));
-                    $this->addFlash('success', $translator->trans('The event has been successfully created'));
+                    if (!$slug) {
+                        $event->setOrganizer($this->getUser()->getOrganizer());
+                        $rr = $event->setReference($services->generateReference(10));
+                        $this->event_mails_data_save($rr->getReference(), $input, $file, $entityManager);
+                        $this->addFlash('success', $translator->trans('The event has been successfully created'));
+                    } else {
+                        $this->addFlash('success', $translator->trans('The event has been successfully updated'));
+                    }
+                    $em->persist($event);
+                    $em->flush();
+                    if ($authChecker->isGranted('ROLE_ORGANIZER')) {
+                        return $this->redirectToRoute("dashboard_organizer_event");
+                    } elseif ($authChecker->isGranted('ROLE_ADMINISTRATOR')) {
+                        return $this->redirectToRoute("dashboard_administrator_event");
+                    }
                 } else {
-                    $this->addFlash('success', $translator->trans('The event has been successfully updated'));
+                    if (!$slug) {
+                        $this->addFlash('error', $translator->trans('Must be upload a valid CSV file. Download and show demo CSV'));
+                    }
                 }
-                $em->persist($event);
-                $em->flush();
-                if ($authChecker->isGranted('ROLE_ORGANIZER')) {
-                    return $this->redirectToRoute("dashboard_organizer_event");
-                } elseif ($authChecker->isGranted('ROLE_ADMINISTRATOR')) {
-                    return $this->redirectToRoute("dashboard_administrator_event");
-                }
-
-               
-
             } else {
                 $this->addFlash('error', $translator->trans('The form contains invalid data'));
             }
@@ -129,59 +136,127 @@ class EventController extends Controller {
     }
 
 
-    public function event_mails_data_save($event_ref_id,$input, $file, $entityManager)
+    public function event_mails_csv_check($event_ref_id, $input, $file, $entityManager)
     {
-        if ($file['error'] === UPLOAD_ERR_OK) {
-            $tmpFilePath = $file['tmp_name'];
-            if ($file['type'] === 'text/csv') {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                $tmpFilePath = $file['tmp_name'];
+                if ($file['type'] === 'text/csv') {
 
-                $handle = fopen($tmpFilePath, 'r');
-                $datas = [];
-                $headers = fgetcsv($handle);
-                while (($row = fgetcsv($handle)) !== false) {
-                    $datas[] = array_combine($headers, $row);
-                }
-                fclose($handle);
-                $subscriber_list_id = $input['subscriber_id'];
-                $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
-                $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
-                foreach ($datas as $data) {
-                    $data['name'];
-                    $data['surname'];
-                    $data['email'];
-                    $data['phone_number'];
-                    $data['department'];
-                    $data['city'];
-                    $data['country'];
-                    $data['address'];
+                    $handle = fopen($tmpFilePath, 'r');
+                    $datas = [];
+                    $headers = fgetcsv($handle);
+                    while (($row = fgetcsv($handle)) !== false) {
+                        if (count($row) !== count($headers)) {
+                            continue;
+                        }
+                        $datas[] = array_combine($headers, $row);
+                    }
 
-                    $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
+                    fclose($handle);
+                    $subscriber_list_id = $input['subscriber_id'];
+                    $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
+                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+                    foreach ($datas as $data) {
+                        $data['name'];
+                        $data['surname'];
+                        $data['email'];
+                        $data['phone_number'];
+                        $data['department'];
+                        $data['city'];
+                        $data['country'];
+                        $data['address'];
+
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
                     VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
-                    $params = [
-                        'event_ref_id'       => $event_ref_id,
-                        'send_type'          => $send_type,
-                        'send_chanel'        => $send_chanel,
-                        'subscriber_list_id' => $subscriber_list_id,
-                        'name'               => $data['name'],
-                        'surname'            => $data['surname'],
-                        'email'              => $data['email'],
-                        'phone_number'       => $data['phone_number'],
-                        'department'         => $data['department'],
-                        'city'               => $data['city'],
-                        'country'            => $data['country'],
-                        'address'            => $data['address'],
-                    ];
+                        $params = [
+                            'event_ref_id'       => $event_ref_id,
+                            'send_type'          => $send_type,
+                            'send_chanel'        => $send_chanel,
+                            'subscriber_list_id' => $subscriber_list_id,
+                            'name'               => $data['name'],
+                            'surname'            => $data['surname'],
+                            'email'              => $data['email'],
+                            'phone_number'       => $data['phone_number'],
+                            'department'         => $data['department'],
+                            'city'               => $data['city'],
+                            'country'            => $data['country'],
+                            'address'            => $data['address'],
+                        ];
 
-                    $statement = $entityManager->getConnection()->prepare($sql);
-                    $statement->execute($params);
-
+                        $statement = $entityManager->getConnection()->prepare($sql);
+                    }
+                    return true;
+                } else {
+                    return false;
                 }
-
             } else {
-                echo 'File is not a CSV.';
+                return false;
             }
-        } else {
-            echo 'File upload failed.';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+    public function event_mails_data_save($event_ref_id, $input, $file, $entityManager)
+    {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                $tmpFilePath = $file['tmp_name'];
+                if ($file['type'] === 'text/csv') {
+
+                    $handle = fopen($tmpFilePath, 'r');
+                    $datas = [];
+                    $headers = fgetcsv($handle);
+                    while (($row = fgetcsv($handle)) !== false) {
+                        if (count($row) !== count($headers)) {
+                            continue;
+                        }
+                        $datas[] = array_combine($headers, $row);
+                    }
+
+                    fclose($handle);
+                    $subscriber_list_id = $input['subscriber_id'];
+                    $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
+                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+                    foreach ($datas as $data) {
+                        $data['name'];
+                        $data['surname'];
+                        $data['email'];
+                        $data['phone_number'];
+                        $data['department'];
+                        $data['city'];
+                        $data['country'];
+                        $data['address'];
+
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
+                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
+                        $params = [
+                            'event_ref_id'       => $event_ref_id,
+                            'send_type'          => $send_type,
+                            'send_chanel'        => $send_chanel,
+                            'subscriber_list_id' => $subscriber_list_id,
+                            'name'               => $data['name'],
+                            'surname'            => $data['surname'],
+                            'email'              => $data['email'],
+                            'phone_number'       => $data['phone_number'],
+                            'department'         => $data['department'],
+                            'city'               => $data['city'],
+                            'country'            => $data['country'],
+                            'address'            => $data['address'],
+                        ];
+
+                        $statement = $entityManager->getConnection()->prepare($sql);
+                        $success = $statement->execute($params);
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+            return false;
         }
     }
 
@@ -191,7 +266,8 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/{slug}/delete-permanently", name="dashboard_organizer_event_delete_permanently", methods="GET")
      * @Route("/organizer/my-events/{slug}/delete", name="dashboard_organizer_event_delete", methods="GET")
      */
-    public function delete(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function delete(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
             $organizer = $this->getUser()->getOrganizer()->getSlug();
@@ -221,7 +297,8 @@ class EventController extends Controller {
     /**
      * @Route("/administrator/manage-events/{slug}/restore", name="dashboard_administrator_event_restore", methods="GET")
      */
-    public function restore($slug, Request $request, TranslatorInterface $translator, AppServices $services) {
+    public function restore($slug, Request $request, TranslatorInterface $translator, AppServices $services)
+    {
 
         $event = $services->getEvents(array("slug" => $slug, "published" => "all", "elapsed" => "all", "organizer" => "all", "organizerEnabled" => "all"))->getQuery()->getOneOrNullResult();
         if (!$event) {
@@ -241,7 +318,8 @@ class EventController extends Controller {
      * @Route("/organizer/my-events/{slug}/publish", name="dashboard_organizer_event_publish", methods="GET")
      * @Route("/organizer/my-events/{slug}/draft", name="dashboard_organizer_event_draft", methods="GET")
      */
-    public function showhide(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function showhide(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
 
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
@@ -270,7 +348,8 @@ class EventController extends Controller {
      * @Route("/administrator/manage-events/{slug}/details", name="dashboard_administrator_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      * @Route("/organizer/my-events/{slug}/details", name="dashboard_organizer_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      */
-    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker) {
+    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    {
 
         $organizer = "all";
         if ($authChecker->isGranted('ROLE_ORGANIZER')) {
@@ -282,7 +361,7 @@ class EventController extends Controller {
             return new Response($translator->trans('The event can not be found'));
         }
         return $this->render('Dashboard/Shared/Event/details.html.twig', [
-                    'event' => $event,
+            'event' => $event,
         ]);
     }
 
@@ -319,12 +398,5 @@ class EventController extends Controller {
         $response = new BinaryFileResponse($filePath);
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, basename($filePath));
         return $response;
-
     }
-
-
-
-
-
-
 }

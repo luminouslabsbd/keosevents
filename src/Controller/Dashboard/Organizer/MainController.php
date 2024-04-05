@@ -31,7 +31,7 @@ class MainController extends Controller {
         $ticketsSalesByDateLineChart->getOptions()->setLineWidth(2);
         $ticketsSalesByDateLineChart->getOptions()->getLegend()->setPosition('none');
         $params = [
-            'organizer' => 'tanha',
+            'organizer' => $this->getUser()->getOrganizer()->getSlug(),
             'count' => 1,
             'published' => 1,
             'elapsed' => 'all'
