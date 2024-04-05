@@ -141,6 +141,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                
                             </div>
                         </div>
                     </div>
@@ -148,20 +149,6 @@
             </div>
         </div>
     </section>
-
-    {# {% if app.session.has('chatbotId') %}
-        {% set myData = app.session.get('chatbotId') %}
-        {% do app.session.remove('chatbotId') %}
-
-        <script type="module">
-            import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js";
-            Chatbot.init({
-                chatflowid: "{{ myData | escape('js') }}",
-                apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
-            });
-        </script>
-    {% endif %} #}
-
 
 {% endblock %}
 

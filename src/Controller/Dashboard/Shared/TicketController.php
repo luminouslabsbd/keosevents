@@ -13,6 +13,7 @@ use Swift_Mailer;
 use Twig\Environment;
 use Doctrine\DBAL\Connection;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use GuzzleHttp\Client;
 
 
 class TicketController extends Controller
@@ -323,5 +324,124 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
     }
     return $this->redirect($request->headers->get('referer'));
 }
+
+
+
+public function send_ticket_for_whatsapp(Request $request, AppServices $services, TranslatorInterface $translator, Connection $connection, Swift_Mailer $mailer, Environment $templating, $event = null)
+{
+        $sql = "SELECT * FROM eventic_event WHERE id = :id";
+        $params = ['id' => $event];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $event_info = $statement->fetch();
+
+    
+
+        if (!$event_info) {
+            $this->addFlash('error', $translator->trans('The event can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $ref_id = $event_info['reference'];
+
+        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $ref_id;
+
+        if (!$link) {
+            $this->addFlash('error', $translator->trans('The event Link can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $user_id = $event_info['organizer_id'];
+
+        $sql2 = "SELECT * FROM eventic_user WHERE organizer_id = :id";
+        $params2 = ['id' => $user_id];
+        $statement2 = $connection->prepare($sql2);
+        $statement2->execute($params2);
+        $user_info = $statement2->fetch();
+
+        if (!$user_info) {
+            $this->addFlash('error', $translator->trans('The user information can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $sql3 = "SELECT * FROM event_mails WHERE event_ref_id = :ref_id";
+        $params3 = ['ref_id' => $ref_id];
+        $statement3 = $connection->prepare($sql3);
+        $statement3->execute($params3);
+        $eventMails = $statement3->fetchAll();
+
+        if (empty($eventMails)) {
+            $this->addFlash('error', $translator->trans('No emails found for this event'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $sql4 = "SELECT * FROM eventic_event_date WHERE event_id = :id";
+        $params4 = ['id' => $event];
+        $statement4 = $connection->prepare($sql4);
+        $statement4->execute($params4);
+        $event_date = $statement4->fetch();
+        $event_date_id = $event_date['id'];
+
+        if (!$event_date) {
+            $this->addFlash('error', $translator->trans('The event date can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $sql6 = "SELECT * FROM eventic_event_date_ticket WHERE eventdate_id = :id";
+        $params6 = ['id' => $event_date_id];
+        $statement6 = $connection->prepare($sql6);
+        $statement6->execute($params6);
+        $event_ticket = $statement6->fetch();
+
+        if (!$event_ticket) {
+            $this->addFlash('error', $translator->trans('The event ticket can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+
+        $currentDateTime = new \DateTime();
+        $timezone = new \DateTimeZone('America/New_York');
+        $currentDateTime->setTimezone($timezone);
+        $orderDateTime = $currentDateTime->format('D d M Y, h:i A T');
+
+        foreach ($eventMails as $eventMail) {
+            $templateObject = [
+                'id' => '19660948-5440-48e1-9073-0ff8b575f32a',
+                'params' => [$eventMail['name'], "15643", $event_date['startdate'], "Online", $link]
+            ];
+            $templateJson = json_encode($templateObject);
+            $postData = http_build_query([
+                'source' => '573022177303',
+                'destination' => $eventMail['phone_number'],
+                'template' => $templateJson
+            ]);
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'http://api.gupshup.io/sm/api/v1/template/msg',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => $postData,
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'apikey: cky6px6gylnajx0epf1xafnxqluh8lyh',
+                    'Authorization: Bearer sk_4b777aa004e7403d86c481b3d2c15f49'
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+
+
+        }
+
+        
+        return $this->redirect($request->headers->get('referer'));
+
+}
+
+
 
 }
