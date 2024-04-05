@@ -167,12 +167,12 @@ class EventType extends AbstractType {
                     },
                     'attr' => ['class' => 'select2', 'data-sort-options' => '1']
                 ])
-                ->add('youtubeurl', TextType::class, [
-                    'purify_html' => true,
-                    'required' => false,
-                    'label' => 'Youtube video url',
-                    'help' => 'If you have an Youtube video that represents your activities as an event organizer, add it in the standard format: https://www.youtube.com/watch?v=FzG4uDgje3M'
-                ])
+                // ->add('youtubeurl', TextType::class, [
+                //     'purify_html' => true,
+                //     'required' => false,
+                //     'label' => 'Youtube video url',
+                //     'help' => 'If you have an Youtube video that represents your activities as an event organizer, add it in the standard format: https://www.youtube.com/watch?v=FzG4uDgje3M'
+                // ])
                 ->add('externallink', TextType::class, [
                     'purify_html' => true,
                     'required' => false,

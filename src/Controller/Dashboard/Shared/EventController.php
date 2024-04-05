@@ -17,6 +17,7 @@ use Exception;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Doctrine\DBAL\Connection;
 
 
 class EventController extends Controller
@@ -156,8 +157,11 @@ class EventController extends Controller
                     fclose($handle);
                     $subscriber_list_id = $input['subscriber_id'];
                     $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
-                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+                    $send_chanel = $input['event']['sendchanel'] == 1 ? 'email' : 'whatsapp';
                     foreach ($datas as $data) {
+                        if(isset($data['email']) && $data['email'] == ""){
+                            continue;
+                        }
                         $data['name'];
                         $data['surname'];
                         $data['email'];
@@ -219,6 +223,9 @@ class EventController extends Controller
                     $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
                     $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
                     foreach ($datas as $data) {
+                        if(isset($data['email']) && $data['email'] == ""){
+                            continue;
+                        }
                         $data['name'];
                         $data['surname'];
                         $data['email'];
@@ -348,7 +355,7 @@ class EventController extends Controller
      * @Route("/administrator/manage-events/{slug}/details", name="dashboard_administrator_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      * @Route("/organizer/my-events/{slug}/details", name="dashboard_organizer_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      */
-    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker)
+    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker,Connection $connection)
     {
 
         $organizer = "all";
@@ -360,8 +367,27 @@ class EventController extends Controller
         if (!$event) {
             return new Response($translator->trans('The event can not be found'));
         }
+        
+        $eventDate = $event->getEventDates()->toArray();
+        $meeting_id =  isset($eventDate[0]) ? $eventDate[0]->getMeetinglink() : null;
+
+        $sql = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
+        $params = ['id' => $meeting_id];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $event_meeting = $statement->fetch();
+
+        $meeting_link = $event_meeting['start_url'];
+
+        if (!$meeting_link) {
+            $this->addFlash('error', $translator->trans('The Host Join can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
+    
+
         return $this->render('Dashboard/Shared/Event/details.html.twig', [
             'event' => $event,
+            'meeting_link' => $meeting_link
         ]);
     }
 

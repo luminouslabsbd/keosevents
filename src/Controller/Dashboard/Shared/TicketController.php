@@ -299,29 +299,37 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
     $orderDateTime = $currentDateTime->format('D d M Y, h:i A T');
 
     foreach ($eventMails as $eventMail) {
-        $email = (new \Swift_Message($translator->trans("Ticket Mail server test email")))
-            ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
-            ->setTo($eventMail['email'])
-            ->setBody($templating->render('Dashboard/Shared/SendTicket/eventTicketForCsv.html.twig', [
-                'eventMail' => $eventMail,
-                'user' => $user_info,
-                'event_date' => $event_date,
-                'link' => $link,
-                'event_ticket' => $event_ticket,
-                'orderDateTime' => $orderDateTime,
-            ]), 'text/html');
-
-        try {
-            $result = $mailer->send($email);
-            if ($result == 0) {
+        if ($eventMail['status'] == 0) {
+            $email = (new \Swift_Message($translator->trans("Ticket Mail For Guest")))
+                ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
+                ->setTo($eventMail['email'])
+                ->setBody($templating->render('Dashboard/Shared/SendTicket/eventTicketForCsv.html.twig', [
+                    'eventMail' => $eventMail,
+                    'user' => $user_info,
+                    'event_date' => $event_date,
+                    'link' => $link,
+                    'event_ticket' => $event_ticket,
+                    'orderDateTime' => $orderDateTime,
+                ]), 'text/html');
+    
+            try {
+                $result = $mailer->send($email);
+                if ($result == 0) {
+                    $this->addFlash('danger', $translator->trans("The email could not be sent"));
+                } else {
+                    $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $eventMail['email']);
+                }
+            } catch (\Exception $e) {
                 $this->addFlash('danger', $translator->trans("The email could not be sent"));
-            } else {
-                $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $eventMail['email']);
             }
-        } catch (\Exception $e) {
-            $this->addFlash('danger', $translator->trans("The email could not be sent"));
+            // Update the status
+            $sqlUpdate = "UPDATE event_mails SET status = 1 WHERE id = :mailId";
+            $paramsUpdate = ['mailId' => $eventMail['id']];
+            $statementUpdate = $connection->prepare($sqlUpdate);
+            $statementUpdate->execute($paramsUpdate);
         }
     }
+    
     return $this->redirect($request->headers->get('referer'));
 }
 

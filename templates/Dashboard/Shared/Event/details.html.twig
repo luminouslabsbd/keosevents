@@ -225,6 +225,12 @@
                                                 <td>{{ "Tickets types"|trans }}</td>
                                                 <td>{{ eventdate.tickets|length }}</td>
                                             </tr>
+                                            {% if meeting_link %}
+                                                <tr>
+                                                    <td>{{ "Host URL"|trans }}</td>
+                                                    <td>  <a href="{{ meeting_link |trans }}" target="_blank">Host Join Link</a></td>
+                                                </tr>
+                                            {% endif %}
                                             {% if eventdate.scanners|length %}
                                                 <tr>
                                                     <td>{{ "Scanners"|trans }}</td>
