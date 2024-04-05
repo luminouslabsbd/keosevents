@@ -413,7 +413,7 @@ public function send_ticket_for_whatsapp(Request $request, AppServices $services
 
         foreach ($eventMails as $eventMail) {
             $templateObject = [
-                'id' => '19660948-5440-48e1-9073-0ff8b575f32a',
+                'id' => '',
                 'params' => [$eventMail['name'], "15643", $event_date['startdate'], "Online", $link]
             ];
             $templateJson = json_encode($templateObject);
@@ -436,7 +436,7 @@ public function send_ticket_for_whatsapp(Request $request, AppServices $services
                 CURLOPT_HTTPHEADER => array(
                     'Content-Type: application/x-www-form-urlencoded',
                     'apikey: cky6px6gylnajx0epf1xafnxqluh8lyh',
-                    'Authorization: Bearer sk_4b777aa004e7403d86c481b3d2c15f49'
+                    'Authorization: Bearer '
                 ),
             ));
             $response = curl_exec($curl);
