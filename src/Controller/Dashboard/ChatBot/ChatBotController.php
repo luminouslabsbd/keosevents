@@ -30,18 +30,27 @@ class ChatBotController extends Controller
     public function chatbot_train_text(TranslatorInterface $translator)
     {
         $bots = [];
+        $chat_bot_lists = [];
+        $user = $this->getUser();
+        $authId = $user->getId();
         try {
-            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots');
+            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots-sys');
             $bots = $response->toArray();
+
+            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL'] . '/user-chatbots/' . $authId);
+            $chat_bot_lists = $response2->toArray();
+
         } catch (\Exception $exception) {
             $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
         }
 
         return $this->render('Dashboard/ChatBot/train-text-bot.html.twig', [
             'bots' => $bots,
+            'chat_bot_lists' => $chat_bot_lists,
         ]);
-        
+
     }
+
     public function chatbot_train_attachment(TranslatorInterface $translator)
     {
         $bots = [];
@@ -49,11 +58,11 @@ class ChatBotController extends Controller
         $user = $this->getUser();
         $authId = $user->getId();
         try {
-            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots');
+            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots-wevi');
             $bots = $response->toArray();
 
-            $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/user-chatbots/'. $authId);
-            $chat_bot_lists = $response->toArray();
+            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/user-chatbots/'. $authId);
+            $chat_bot_lists = $response2->toArray();
 
         } catch (\Exception $exception) {
             $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
@@ -72,9 +81,48 @@ class ChatBotController extends Controller
     }
 
 
-    public function chatbot_train_list_store(Request $request, SessionInterface $session)
+    public function chatbot_train_list_store(Request $request, EntityManagerInterface $entityManager, TranslatorInterface $translator)
     {
-        // 
+        $client = new Client();
+        $data = $request->request->all();
+
+        if ($data['bot_text'] != '') {
+            try {
+                $user = $this->getUser();
+                $authId = $user->getId();
+
+                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL']. '/create-chatbot-sys', [
+                    'bot_text' => $data['bot_text'],
+                ]);
+                $body = $response->getBody()->getContents();
+                $responseData = json_decode($body, true);
+
+                $sql = "INSERT INTO chatbot_lists (org_id, template_id, type, description, chatbot_id, chatbot_name, status) 
+                VALUES (:org_id, :template_id, :type, :description, :chatbot_id, :chatbot_name, :status)";
+
+                $params = [
+                    'org_id'       => $authId,
+                    'template_id'  => trim($data['bot_select']),
+                    'type'         => 'text',
+                    'description'  => trim($data['bot_text']),
+                    'chatbot_id'   => $responseData['chatbotId'],
+                    'chatbot_name' => $responseData['chatbotName'],
+                    'status'       => 0,
+                ];
+
+                $statement = $entityManager->getConnection()->prepare($sql);
+                $statement->execute($params);
+
+                $this->addFlash('success', $responseData['chatbotName'] . $translator->trans(' chatbot has been created successfully'));
+            } catch (RequestException $e) {
+                $this->addFlash('error', $translator->trans('Chatbot cannot procced right now'));
+            }
+        } else {
+            $this->addFlash('error', $translator->trans('Please write your text that train you chatbot'));
+        }
+
+        $referrer = $request->headers->get('referer');
+        return $this->redirect($referrer);
     }
 
     public function chatbot_train_attachment_store(Request $request,  EntityManagerInterface $entityManager, TranslatorInterface $translator)

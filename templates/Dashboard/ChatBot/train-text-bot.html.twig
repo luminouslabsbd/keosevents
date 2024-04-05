@@ -4,6 +4,38 @@
 
 {% block title %}{{ pagetitle }}{% endblock %}
 
+{% block stylesheets %}
+    <style>
+        .chatbot-attach{
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .chatbot-attach a{
+            position: absolute;
+            right: 0px;
+            top: 0px;
+        }
+
+        .trained-chatbot-list-drop{
+            padding-right: 18px !important;
+            padding-left: 18px !important;
+            background-color: #f1f3f7;
+            border-radius: 5px;
+            padding-top: 13px;
+            color: #8898aa;
+            padding-bottom: 13px;
+        }
+
+        .dropdown-item{
+            display: flex;
+            justify-content: space-between;
+            gap: 3px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
 
     {% set navigation = [{"dashboard_index": "Dashboard"|trans,"current":(pagetitle)}] %}
@@ -17,39 +49,90 @@
                 </aside>
                 <div class="col-lg-9 mt-4 mt-lg-0">
 
-                    <form action="{{ path('chatbot_train_list_store') }}" method="post">
-                        <div class="card shadow">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center gap-5">
-                                    <h3>Train Text Bot</h3>
-                                    <button type="submit" class="btn btn-info rounded">Train</button>
-                                </div>
-                                <div class="mt-5">
-                                    <div class="mb-2">
-                                        <label>Chatbot</label>
-                                        <select class="form-control" name="bot_id" id="bot_select" required>
-                                            <option value="" disabled selected>Select A Bot</option>
-                                            {% for bot in bots %}
-                                                <option value="{{  bot['id'] }}">{{  bot['name'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <div class="row">
 
-                                    <div class="mb-2">
-                                         <label>Description</label>
-                                        <textarea name="bot_text" cols="" rows="10" class="form-control" placeholder="Write text for train your chatbot"></textarea>
+                                <div class="col-md-6">
+                                    <form action="{{ path('chatbot_train_list_store') }}" method="post">
+                                        <div class="text_chatbot">
+
+                                            <div class="mb-2">
+                                                <label>Chatbot</label>
+                                                <select class="form-control" name="bot_select" id="bot_select" required>
+                                                    <option value="" disabled selected>Select A Bot</option>
+                                                    {% for bot in bots %}
+                                                        <option value="{{  bot['id'] }}">{{  bot['name'] }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <label>Description</label>
+                                                <textarea name="bot_text" cols="" rows="10" class="form-control" placeholder="Write text for train your chatbot"></textarea>
+                                            </div>
+ 
+                                            <div class="mb-2 mt-4">
+                                                <div class="form-group">
+                                                    <button type="submit" class="btn btn-info rounded">Train</button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </form> 
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Trained Chatbot</label>
+                                                <select class="form-control" name="bot_list" id="bot_list" required>
+                                                    <option value="" disabled selected>Select a chatbot</option>
+                                                    {% for chat_bot_list in chat_bot_lists %}
+                                                        <option value="{{ chat_bot_list['id'] }}">{{ chat_bot_list['name'] }} </option> 
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="">
+                                                <h5>Trained Chatbot List</h5>
+                                                <ul class="navbar-nav mr-auto">
+                                                    <li class="nav-item dropdown " >
+                                                        <a class="nav-link dropdown-toggle trained-chatbot-list-drop" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            Chatbot List
+                                                        </a>
+                                                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                                        {% if chat_bot_lists|length > 0 %}
+                                                            {% for chat_bot_list in chat_bot_lists %}
+                                                                <p class="dropdown-item">{{ chat_bot_list['name'] }}
+                                                                    <a onclick="return confirm('Are you sure to delete this?')" href="{{ path('delete_chatbot_list', { chatbotId: chat_bot_list['id'] }) }}" class="delete_chatbot_btn btn btn-danger btn-sm" data-id="{{ chat_bot_list['id'] }}">X</a>
+                                                                </p>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <p class="pl-2"> Not aviable chatbot yet </p>
+                                                        {% endif %}
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
+
                             </div>
                         </div>
-                    </form> 
+                    </div>
+
                 </div>
             </div>
         </div>
     </section>
 
 
-    {% if app.session.has('chatbotId') %}
+    {# {% if app.session.has('chatbotId') %}
         {% set myData = app.session.get('chatbotId') %}
         {% do app.session.remove('chatbotId') %}
 
@@ -60,10 +143,20 @@
                 apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
             });
         </script>
-    {% endif %}
+    {% endif %} #}
 
 
 {% endblock %}
 
 {% block javascripts %}
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js";
+        $(document).on('change', '#bot_list',function(){
+            var value = $(this).val();
+            Chatbot.init({
+                chatflowid: value,
+                apiHost: "https://a056-2a01-4ff-f0-dc64-00-1.ngrok-free.app",
+            });
+        })
+    </script>
 {% endblock %}
