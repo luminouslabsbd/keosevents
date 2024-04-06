@@ -165,14 +165,15 @@ class EventController extends Controller
                         $data['name'];
                         $data['surname'];
                         $data['email'];
+                        $data['country_code'];
                         $data['phone_number'];
                         $data['department'];
                         $data['city'];
                         $data['country'];
                         $data['address'];
 
-                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
-                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
+                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
                         $params = [
                             'event_ref_id'       => $event_ref_id,
                             'send_type'          => $send_type,
@@ -181,6 +182,7 @@ class EventController extends Controller
                             'name'               => $data['name'],
                             'surname'            => $data['surname'],
                             'email'              => $data['email'],
+                            'country_code'       => $data['country_code'],
                             'phone_number'       => $data['phone_number'],
                             'department'         => $data['department'],
                             'city'               => $data['city'],
@@ -229,14 +231,15 @@ class EventController extends Controller
                         $data['name'];
                         $data['surname'];
                         $data['email'];
+                        $data['country_code'];
                         $data['phone_number'];
                         $data['department'];
                         $data['city'];
                         $data['country'];
                         $data['address'];
 
-                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, phone_number, department, city, country,address) 
-                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :phone_number, :department, :city, :country,:address)";
+                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
+                        VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
                         $params = [
                             'event_ref_id'       => $event_ref_id,
                             'send_type'          => $send_type,
@@ -245,6 +248,7 @@ class EventController extends Controller
                             'name'               => $data['name'],
                             'surname'            => $data['surname'],
                             'email'              => $data['email'],
+                            'country_code'       => $data['country_code'],
                             'phone_number'       => $data['phone_number'],
                             'department'         => $data['department'],
                             'city'               => $data['city'],
@@ -254,6 +258,7 @@ class EventController extends Controller
 
                         $statement = $entityManager->getConnection()->prepare($sql);
                         $success = $statement->execute($params);
+
                     }
                     return true;
                 } else {
