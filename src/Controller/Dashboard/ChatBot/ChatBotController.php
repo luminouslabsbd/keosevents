@@ -98,9 +98,15 @@ class ChatBotController extends Controller
                 $user = $this->getUser();
                 $authId = $user->getId();
 
-                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL']. '/create-chatbot-sys/'. $authId, [
-                    'bot_text' => $data['bot_text'],
+                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL'] . '/create-chatbot-sys/' . $authId, [
+                    'headers' => [
+                        'Content-Type' => 'application/json'
+                    ],
+                    'json' => [
+                        "bot_text" => $data['bot_text']
+                    ]
                 ]);
+
                 $body = $response->getBody()->getContents();
                 $responseData = json_decode($body, true);
 
