@@ -460,7 +460,7 @@ class EventController extends Controller
      * @Route("/administrator/manage-events/{slug}/details", name="dashboard_administrator_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      * @Route("/organizer/my-events/{slug}/details", name="dashboard_organizer_event_details", methods="GET", condition="request.isXmlHttpRequest()")
      */
-    public function details(AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker,Connection $connection)
+    public function details(Request $request, AppServices $services, TranslatorInterface $translator, $slug, AuthorizationCheckerInterface $authChecker,Connection $connection)
     {
 
         $organizer = "all";
