@@ -180,8 +180,8 @@ class EventController extends Controller
                         $data['name'];
                         $data['surname'];
                         $data['email'];
-                        $data['country_code'];
-                        $data['phone_number'];
+                        $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
+                        $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
                         $data['department'];
                         $data['city'];
                         $data['country'];
@@ -197,8 +197,8 @@ class EventController extends Controller
                             'name'               => $data['name'],
                             'surname'            => $data['surname'],
                             'email'              => $data['email'],
-                            'country_code'       => $data['country_code'],
-                            'phone_number'       => $data['phone_number'],
+                            'country_code'       => $country_code,
+                            'phone_number'       => $phone_number,
                             'department'         => $data['department'],
                             'city'               => $data['city'],
                             'country'            => $data['country'],
@@ -246,8 +246,8 @@ class EventController extends Controller
                         $data['name'];
                         $data['surname'];
                         $data['email'];
-                        $data['country_code'];
-                        $data['phone_number'];
+                        $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
+                        $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
                         $data['department'];
                         $data['city'];
                         $data['country'];
@@ -263,8 +263,8 @@ class EventController extends Controller
                             'name'               => $data['name'],
                             'surname'            => $data['surname'],
                             'email'              => $data['email'],
-                            'country_code'       => $data['country_code'],
-                            'phone_number'       => $data['phone_number'],
+                            'country_code'       => $country_code,
+                            'phone_number'       => $phone_number,
                             'department'         => $data['department'],
                             'city'               => $data['city'],
                             'country'            => $data['country'],
@@ -305,14 +305,16 @@ class EventController extends Controller
                         $datas[] = array_combine($headers, $row);
                     }
                   
-                    foreach ($csv_info as $existingRow) {
-                        foreach ($datas as $newRow) {
+                    foreach ($datas as $newRow) {
+                        $matched = false;
+                        foreach ($csv_info as $existingRow) {
                             if ($existingRow['email'] == $newRow['email'] || $existingRow['phone_number'] == $newRow['phone_number']) {
-                                // Check if email or phone number matches
-                                $matches[] = [$existingRow, $newRow];
-                            } else {
-                                $differences[] = [$existingRow, $newRow];
+                                $matched = true;
+                                break;
                             }
+                        }
+                        if (!$matched) {
+                            $differences[] = $newRow;
                         }
                     }
                 
@@ -329,8 +331,8 @@ class EventController extends Controller
                             $data['name'];
                             $data['surname'];
                             $data['email'];
-                            $data['country_code'];
-                            $data['phone_number'];
+                            $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
+                            $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
                             $data['department'];
                             $data['city'];
                             $data['country'];
@@ -346,8 +348,8 @@ class EventController extends Controller
                                 'name'               => $data['name'],
                                 'surname'            => $data['surname'],
                                 'email'              => $data['email'],
-                                'country_code'       => $data['country_code'],
-                                'phone_number'       => $data['phone_number'],
+                                'country_code'       => $country_code,
+                                'phone_number'       => $phone_number,
                                 'department'         => $data['department'],
                                 'city'               => $data['city'],
                                 'country'            => $data['country'],
