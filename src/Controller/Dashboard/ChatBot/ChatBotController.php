@@ -37,7 +37,11 @@ class ChatBotController extends Controller
             $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots-sys');
             $bots = $response->toArray();
 
-            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL'] . '/user-chatbots/' . $authId);
+            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL'] . '/user-chatbots/' . $authId, [
+                'json' => [
+                    'category' => 'system'
+                ]
+            ]);
             $chat_bot_lists = $response2->toArray();
 
         } catch (\Exception $exception) {
@@ -61,7 +65,11 @@ class ChatBotController extends Controller
             $response = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/template-chatbots-wevi');
             $bots = $response->toArray();
 
-            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL']. '/user-chatbots/'. $authId);
+            $response2 = $this->client->request("GET", $_ENV['CHATBOT_BASEURL'] . '/user-chatbots/' . $authId, [
+                'json' => [
+                    'category' => 'weaviate'
+                ]
+            ]);
             $chat_bot_lists = $response2->toArray();
 
         } catch (\Exception $exception) {
@@ -85,15 +93,20 @@ class ChatBotController extends Controller
     {
         $client = new Client();
         $data = $request->request->all();
-
         if ($data['bot_text'] != '') {
             try {
                 $user = $this->getUser();
                 $authId = $user->getId();
 
-                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL']. '/create-chatbot-sys', [
-                    'bot_text' => $data['bot_text'],
+                $response = $client->request("POST", $_ENV['CHATBOT_BASEURL'] . '/create-chatbot-sys/' . $authId, [
+                    'headers' => [
+                        'Content-Type' => 'application/json'
+                    ],
+                    'json' => [
+                        "bot_text" => $data['bot_text']
+                    ]
                 ]);
+
                 $body = $response->getBody()->getContents();
                 $responseData = json_decode($body, true);
 
