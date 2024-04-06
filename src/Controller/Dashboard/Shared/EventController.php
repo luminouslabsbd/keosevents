@@ -96,10 +96,6 @@ class EventController extends Controller
                     $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
                 }
 
-
-
-
-
                 if(($slug && $file['type'] == '') || $csv_upload ){
                     foreach ($event->getImages() as $image) {
                         $image->setEvent($event);
@@ -125,11 +121,7 @@ class EventController extends Controller
                         if ($file['error'] === UPLOAD_ERR_OK) {
                             if ($file['type'] === 'text/csv') {
                                 $this->event_mails_data_edit($reference, $input,$csv_info, $file, $entityManager);
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            return false;
+                            } 
                         }
                         $this->addFlash('success', $translator->trans('The event has been successfully updated'));
                     }
@@ -160,7 +152,6 @@ class EventController extends Controller
         $statementSelect = $entityManager->getConnection()->prepare($sqlSelect);
         $statementSelect->execute();
         $subscriber_lists = $statementSelect->fetchAll();
-
         return $this->render('Dashboard/Shared/Event/add-edit.html.twig', array(
             "event"          => $event,
             "form"           => $form->createView(),
