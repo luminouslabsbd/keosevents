@@ -231,6 +231,8 @@ class AppServices {
     // Handles all the operations needed after a successful payment processing
     public function handleSuccessfulPayment($orderReference) {
         $order = $this->getOrders(array('status' => 0, 'reference' => $orderReference))->getQuery()->getOneOrNullResult();
+       //  dd( $orderReference,$order );
+      //  dd( $order );
         $order->setStatus(1);
         foreach ($order->getOrderElements() as $orderelement) {
             for ($i = 1; $i <= $orderelement->getQuantity(); $i++) {
@@ -244,13 +246,15 @@ class AppServices {
         $this->em->persist($order);
         $this->em->flush();
         
+        
+   
         if ($order->getUser()->hasRole("ROLE_ATTENDEE")) {
-            $this->sendOrderConfirmationEmail($order, $order->getPayment()->getClientEmail(),$orderReference);
+           // $this->sendOrderConfirmationEmail($order, $order->getPayment()->getClientEmail(),$orderReference,$services);
         }
     }
 
     // Sends the tickets to the attendee
-    public function sendOrderConfirmationEmail($order, $emailTo,$orderReference) {
+    public function sendOrderConfirmationEmail($order, $emailTo,$orderReference,$services) {
         $sqlEvent = "SELECT * FROM eventic_order WHERE reference = :ref_id";
         $paramsEvent = ['ref_id' => $orderReference];
         $statementEvent = $this->connection->prepare($sqlEvent);
@@ -311,6 +315,16 @@ class AppServices {
         $statement4 = $this->connection->prepare($sql4);
         $statement4->execute($params4);
         $one_event = $statement4->fetch();
+        
+        
+        //Get Event By Moniruz
+
+       
+    //  $image=$assetsManager->getUrl('uploads/events/' .$one_event['image_name']);
+ 
+      //  dd($image);
+      //  die();
+        //
 
         if (!$one_event) {
             $this->addFlash('error', $translator->trans('The event can not be found'));

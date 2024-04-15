@@ -289,7 +289,7 @@ class OrderController extends Controller {
         $this->get('payum')->getHttpRequestVerifier()->invalidate($token);
 
         if ($status->isCaptured() || $status->isAuthorized() || $status->isPending()) {
-            $services->handleSuccessfulPayment($payment->getOrder()->getReference());
+            $services->handleSuccessfulPayment($payment->getOrder()->getReference(),$services);
             if ($payment->getOrder()->getOrderElementsPriceSum() > 0) {
                 $this->addFlash('success', $translator->trans('Your payment has been successfully processed'));
             } else {
@@ -704,13 +704,16 @@ class OrderController extends Controller {
     $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
 
         $pdfOptions = new Options();
-//$pdfOptions->set('defaultFont', 'Arial');
+$pdfOptions->set('defaultFont', 'Arial');
+
+
         $dompdf = new Dompdf($pdfOptions);
         $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
             'order' => $order,
             'eventDateTicketReference' => $eventDateTicketReference,
             'link' => $link,
         ]);
+        
 
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
@@ -810,7 +813,7 @@ class OrderController extends Controller {
             return $services->redirectToReferer('orders');
         }
 
-        $services->handleSuccessfulPayment($order->getReference());
+        $services->handleSuccessfulPayment($order->getReference(),$services);
 
         $this->addFlash('success', $translator->trans('The order has been successfully validated'));
 

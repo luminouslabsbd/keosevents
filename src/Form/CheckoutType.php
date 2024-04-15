@@ -109,7 +109,7 @@ class CheckoutType extends AbstractType {
                 ->add('postalcode', TextType::class, [
                     'purify_html' => true,
                     'required' => true,
-                    'label' => 'Postal code',
+                    'label' => 'Phone with country code',
                     'constraints' => array(
                         new NotBlank(['groups' => ['attendee']]),
                         new Length([

@@ -14,6 +14,13 @@ use Twig\Environment;
 use Doctrine\DBAL\Connection;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use GuzzleHttp\Client;
+use App\Entity\CartElement;
+use App\Entity\Order;
+use App\Entity\TicketReservation;
+use App\Entity\OrderTicket;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class TicketController extends Controller
@@ -270,12 +277,22 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         return $this->redirect($request->headers->get('referer'));
     }
 
-    $sql4 = "SELECT * FROM eventic_event_date WHERE event_id = :id";
+ // "SELECT * FROM eventic_event_date WHERE event_id = :id";
+    
+$sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
+FROM eventic_event_date
+JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
+WHERE eventic_event_date.event_id = :id";
+
     $params4 = ['id' => $event];
     $statement4 = $connection->prepare($sql4);
     $statement4->execute($params4);
     $event_date = $statement4->fetch();
-    $event_date_id = $event_date['id'];
+    $event_date_id = $event_date['event_date_id'];
+   // $event_date = $event_date['event_id'];
+    
+    
+//dd($event_date);
 
     if (!$event_date) {
         $this->addFlash('error', $translator->trans('The event date can not be found'));
@@ -297,40 +314,200 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
     $timezone = new \DateTimeZone('America/New_York');
     $currentDateTime->setTimezone($timezone);
     $orderDateTime = $currentDateTime->format('D d M Y, h:i A T');
+    
+ 
+    $ticketreference=$event_ticket['reference'];
+    $em = $this->getDoctrine()->getManager();
+    $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneByReference($ticketreference);
+   // $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneBy(['eventdate_id' => $event_date_id] );
+   // dd($event_ticket,$eventticket);
 
     foreach ($eventMails as $eventMail) {
         if ($eventMail['status'] == 0) {
-            $email = (new \Swift_Message($translator->trans("Ticket Mail For Guest")))
-                ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
-                ->setTo($eventMail['email'])
-                ->setBody($templating->render('Dashboard/Shared/SendTicket/eventTicketForCsv.html.twig', [
-                    'eventMail' => $eventMail,
-                    'user' => $user_info,
-                    'event_date' => $event_date,
-                    'link' => $link,
-                    'event_ticket' => $event_ticket,
-                    'orderDateTime' => $orderDateTime,
-                ]), 'text/html');
-    
-            try {
-                $result = $mailer->send($email);
-                if ($result == 0) {
-                    $this->addFlash('danger', $translator->trans("The email could not be sent"));
-                } else {
-                    $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $eventMail['email']);
+
+            
+            
+            
+                
+        $user = $services->getUsers(array("slug" =>'shojol81', "enabled" => "all"))->getQuery()->getOneOrNullResult();
+        
+        
+        $cartelement = new CartElement();
+        $cartelement->setUser($user);
+        $cartelement->setEventticket($eventticket);
+        $cartelement->setQuantity(intval(1));
+
+        if ($user->hasRole("ROLE_ATTENDEE") && !$cartelement->getEventticket()->getFree()) {
+                    $cartelement->setTicketFee($services->getSetting("ticket_fee_online"));
+        } else if ($user->hasRole("ROLE_POINTOFSALE") && !$cartelement->getEventticket()->getFree()) {
+                    $cartelement->setTicketFee($services->getSetting("ticket_fee_pos"));
+        }
+                
+        $em->persist($cartelement);
+
+        
+       // dd("ok");
+        
+
+           
+                $order = $services->transformCartIntoOrder($user);
+                $order->setStatus(1);
+                $paymentGateway = $em->getRepository("App\Entity\PaymentGateway")->findOneBySlug("point-of-sale");
+                $gatewayFactoryName = "offline";
+                $order->setPaymentGateway($paymentGateway);
+                $em->persist($order);
+                foreach ($order->getOrderelements() as $orderElement) {
+                    for ($i = 1; $i <= $orderElement->getQuantity(); $i++) {
+                        $ticket = new OrderTicket();
+                        $ticket->setOrderElement($orderElement);
+                        $ticket->setReference($services->generateReference(20));
+                        $ticket->setScanned(false);
+                        $em->persist($ticket);
+                  
+                     }  
                 }
-            } catch (\Exception $e) {
-                $this->addFlash('danger', $translator->trans("The email could not be sent"));
-            }
+
+              $storage = $this->get('payum')->getStorage('App\Entity\Payment');
+               $payment = $storage->create();
+                $payment->setOrder($order);
+                $payment->setNumber($services->generateReference(20));
+                $payment->setCurrencyCode($services->getSetting("currency_ccy"));
+                $payment->setTotalAmount("0.0"); // 1.23 USD = 123
+                $payment->setDescription($translator->trans("Payment of tickets purchased on %website_name%", array('%website_name%' => $services->getSetting("website_name"))));
+                    $payment->setClientId($user->getId());
+              
+                    $payment->setFirstname('fefefe');
+             
+              
+                    $payment->setLastname('fefefe');
+                
+           
+                    $payment->setClientEmail('test@gmail.com');
+                   // $payment->setCountry(3);
+                    $payment->setState('dedede');
+                    $payment->setCity('dedede');
+                    $payment->setPostalcode('dededr4fr');
+                    $payment->setStreet('refdrfr');
+                    $payment->setStreet2('rfrfcdede');
+                
+
+                $storage->update($payment);
+                $order->setPayment($payment);
+          
+          
+                $em->flush();   
+                $services->emptyCart($user);
+        
+                
+
+   $orderReference=$order->getReference();
+  
+ $order = $services->getOrders(array("reference" =>$orderReference))->getQuery()->getOneOrNullResult();
+
+
+  $em->refresh($order);
+  $em->refresh($ticket);
+ $em->refresh($orderElement);
+
+        $pdfOptions = new Options();
+        //$pdfOptions->set('defaultFont', 'Arial');
+        $dompdf = new Dompdf($pdfOptions);
+        $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+            'order' => $order,
+            'eventDateTicketReference' => 'all',
+            'link' => $link,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $ticketsPdfFile = $dompdf->output();
+        $emailTo=$eventMail['email'];
+        $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
+                ->setFrom($services->getSetting('no_reply_email'))
+                ->setTo($emailTo)
+                ->setBody(
+                        $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $order]), 'text/html')
+                ->attach(new \Swift_Attachment($ticketsPdfFile, $order->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
+
+        $mailer->send($email);
+
+
+//exit;
+
+        
+      // dd($order->getReference());
+       
+    //  $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
+
+    // $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+    // $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+    //             'order' => $order,
+    //             'eventDateTicketReference' => $eventDateTicketReference,
+    //             'link' => $link,
+    // ]);
+   //  $eventDateTicketReference = $request->query->get('event', 'all');
+  //   $order = $services->getOrders(array("reference" =>$orderReference))->getQuery()->getOneOrNullResult();
+     
+     
+     // $data= $order->getorderelements();
+        //  dump($data);
+        //  foreach($data as $a) {
+        //      dump($a,$a->gettickets());
+        //  }
+         
+       //  dd("ok");
+       
+    //  return $this->render('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+    //             'order' => $order,
+    //             'eventDateTicketReference' => $eventDateTicketReference,
+    //             'link' => $link,
+    // ]);
+    
+                // $email = (new \Swift_Message($translator->trans("Ticket Mail For Guest")))
+                // ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
+                // ->setTo($eventMail['email'])
+                // ->setBody($templating->render('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+                //     'order' => $order,
+                //     'eventDateTicketReference' => $eventDateTicketReference,
+                //     'link' => $link,
+                // ]), 'text/html');
+    
+                // $email = (new \Swift_Message($translator->trans("Ticket Mail For Guest")))
+                // ->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
+                // ->setTo($eventMail['email'])
+                // ->setBody($templating->render('Dashboard/Shared/SendTicket/eventTicketForCsv.html.twig', [
+                //     'eventMail' => $eventMail,
+                //     'user' => $user_info,
+                //     'event_date' => $event_date,
+                //     'link' => $link,
+                //     'event_ticket' => $event_ticket,
+                //     'orderDateTime' => $orderDateTime,
+                // ]), 'text/html');
+                
+    
+            // try {
+            //     $result = $mailer->send($email);
+            //     if ($result == 0) {
+            //         $this->addFlash('danger', $translator->trans("The email could not be sent"));
+            //     } else {
+            //         $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $eventMail['email']);
+            //     }
+            // } catch (\Exception $e) {
+            //     $this->addFlash('danger', $translator->trans("The email could not be sent"));
+            // }
+            
+         //   dd("ojk");
             // Update the status
-            $sqlUpdate = "UPDATE event_mails SET status = 1 WHERE id = :mailId";
-            $paramsUpdate = ['mailId' => $eventMail['id']];
-            $statementUpdate = $connection->prepare($sqlUpdate);
-            $statementUpdate->execute($paramsUpdate);
+            // $sqlUpdate = "UPDATE event_mails SET status = 1 WHERE id = :mailId";
+            // $paramsUpdate = ['mailId' => $eventMail['id']];
+            // $statementUpdate = $connection->prepare($sqlUpdate);
+            // $statementUpdate->execute($paramsUpdate);
         }
     }
+        $responseContent="Invitation sent";
+       return new Response($responseContent);
     
-    return $this->redirect($request->headers->get('referer'));
+   // return $this->redirect($request->headers->get('referer'));
 }
 
 

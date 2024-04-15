@@ -71,10 +71,20 @@
     <body>
 
         <div class="tickets-container">
+        
+     
 
-            {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference) and (is_granted("ROLE_ADMINISTRATOR") or is_granted("ROLE_ATTENDEE") or (is_granted("ROLE_ORGANIZER") and orderElement.belongsToOrganizer(app.user.organizer.slug)) or (is_granted("ROLE_POINTOFSALE") and orderElement.belongsToOrganizer(app.user.pointofsale.organizer.slug))) %}
+
+            {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference)  %}
+
+
+
+
 
                 {% for ticket in orderElement.tickets %}
+                
+    
+
 
                     <div class="ticket-wrapper">
 
@@ -90,11 +100,7 @@
 
                         <table width="100%" class="bordered">
                             <tbody>
-                                <tr>
-                                    <td colspan="2" class="text-center">
-                                        <img src=".{{ asset(services.getAppLayoutSettings.getLogoPath) }}" />
-                                    </td>
-                                </tr>
+
                                 <tr style="background-color: {{ services.getSetting("primary_color") }}; color: #fff;">
                                     <td width="50%">
                                         <h5>{{ "Order"|trans({}, "messages", locale) }} #{{ order.reference }}</h3>
@@ -152,7 +158,7 @@
                                             {% elseif order.payment.details["created"] is defined %}
                                                 {{ order.payment.details["created"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
                                             {% else %}
-                                                {{ order.payment.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                
                                             {% endif %}
                                         </h6>
                                     </td>
@@ -180,6 +186,8 @@
                     </div>
 
                 {% endfor %}
+                
+  
             {% endfor %}
         </div>
 
