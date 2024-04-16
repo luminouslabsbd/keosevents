@@ -635,76 +635,76 @@ class OrderController extends Controller {
         $eventDateTicketReference = $request->query->get('event', 'all');
 
 
-    $sqlEvent = "SELECT * FROM eventic_order WHERE reference = :ref_id";
-    $paramsEvent = ['ref_id' => $reference];
-    $statementEvent = $connection->prepare($sqlEvent);
-    $statementEvent->execute($paramsEvent);
-    $event_order = $statementEvent->fetch();
+        $sqlEvent = "SELECT * FROM eventic_order WHERE reference = :ref_id";
+        $paramsEvent = ['ref_id' => $reference];
+        $statementEvent = $connection->prepare($sqlEvent);
+        $statementEvent->execute($paramsEvent);
+        $event_order = $statementEvent->fetch();
 
-    if (!$event_order) {
-        $this->addFlash('error', $translator->trans('The event order can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
+        if (!$event_order) {
+            $this->addFlash('error', $translator->trans('The event order can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
 
-    $event_order_id = $event_order['id'];
+        $event_order_id = $event_order['id'];
 
-    $sql = "SELECT * FROM eventic_order_element WHERE order_id = :order_id";
-    $params = ['order_id' => $event_order_id];
-    $statement = $connection->prepare($sql);
-    $statement->execute($params);
-    $event_order_ele = $statement->fetch();
+        $sql = "SELECT * FROM eventic_order_element WHERE order_id = :order_id";
+        $params = ['order_id' => $event_order_id];
+        $statement = $connection->prepare($sql);
+        $statement->execute($params);
+        $event_order_ele = $statement->fetch();
 
 
-    if (!$event_order_ele) {
-        $this->addFlash('error', $translator->trans('The event order element date can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
+        if (!$event_order_ele) {
+            $this->addFlash('error', $translator->trans('The event order element date can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
 
-    $event_ticket_id = $event_order_ele['eventticket_id'];
+        $event_ticket_id = $event_order_ele['eventticket_id'];
 
-    $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE id = :ticket_id";
-    $params2 = ['ticket_id' => $event_ticket_id];
-    $statement2 = $connection->prepare($sql2);
-    $statement2->execute($params2);
-    $event_date_ticket = $statement2->fetch();
+        $sql2 = "SELECT * FROM eventic_event_date_ticket WHERE id = :ticket_id";
+        $params2 = ['ticket_id' => $event_ticket_id];
+        $statement2 = $connection->prepare($sql2);
+        $statement2->execute($params2);
+        $event_date_ticket = $statement2->fetch();
 
-    if (!$event_date_ticket) {
-        $this->addFlash('error', $translator->trans('The event ticket can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
+        if (!$event_date_ticket) {
+            $this->addFlash('error', $translator->trans('The event ticket can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
 
-    $event_date_id = $event_date_ticket['eventdate_id'];
+        $event_date_id = $event_date_ticket['eventdate_id'];
 
-    $sql3 = "SELECT * FROM eventic_event_date WHERE id = :date_id";
-    $params3 = ['date_id' => $event_date_id];
-    $statement3 = $connection->prepare($sql3);
-    $statement3->execute($params3);
-    $event_date = $statement3->fetch();
+        $sql3 = "SELECT * FROM eventic_event_date WHERE id = :date_id";
+        $params3 = ['date_id' => $event_date_id];
+        $statement3 = $connection->prepare($sql3);
+        $statement3->execute($params3);
+        $event_date = $statement3->fetch();
 
-    if (!$event_date) {
-        $this->addFlash('error', $translator->trans('The event date can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
+        if (!$event_date) {
+            $this->addFlash('error', $translator->trans('The event date can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
 
-    $link_id = $event_date['meetinglink'];
+        $link_id = $event_date['meetinglink'];
 
-    $event_id = $event_date['event_id'];
+        $event_id = $event_date['event_id'];
 
-    $sql4 = "SELECT * FROM eventic_event WHERE id = :id";
-    $params4 = ['id' => $event_id];
-    $statement4 = $connection->prepare($sql4);
-    $statement4->execute($params4);
-    $one_event = $statement4->fetch();
+        $sql4 = "SELECT * FROM eventic_event WHERE id = :id";
+        $params4 = ['id' => $event_id];
+        $statement4 = $connection->prepare($sql4);
+        $statement4->execute($params4);
+        $one_event = $statement4->fetch();
 
-    if (!$one_event) {
-        $this->addFlash('error', $translator->trans('The event can not be found'));
-        return $this->redirect($request->headers->get('referer'));
-    }
+        if (!$one_event) {
+            $this->addFlash('error', $translator->trans('The event can not be found'));
+            return $this->redirect($request->headers->get('referer'));
+        }
 
-    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
 
         $pdfOptions = new Options();
-$pdfOptions->set('defaultFont', 'Arial');
+        $pdfOptions->set('defaultFont', 'Arial');
 
 
         $dompdf = new Dompdf($pdfOptions);
@@ -721,7 +721,7 @@ $pdfOptions->set('defaultFont', 'Arial');
         $dompdf->stream($order->getReference() . "-" . $translator->trans("tickets"), [
             "Attachment" => false
         ]);
-        exit(0);
+        exit(0);                            
     }
 
     /**

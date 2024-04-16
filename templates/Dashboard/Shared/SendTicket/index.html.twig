@@ -90,6 +90,7 @@
                         </thead>
                         <tbody>
                         {% for order in orders %}
+                        {% if order.orderelements is not null %}
                             {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference) and (is_granted("ROLE_ADMINISTRATOR") or is_granted("ROLE_ATTENDEE") or (is_granted("ROLE_ORGANIZER") and orderElement.belongsToOrganizer(app.user.organizer.slug)) or (is_granted("ROLE_POINTOFSALE") and orderElement.belongsToOrganizer(app.user.pointofsale.organizer.slug))) %}
                                 {% for ticket in orderElement.tickets %}
                                     <tr>
@@ -214,6 +215,8 @@
                                     </tr>
                                 {% endfor %}
                             {% endfor %}
+                        {% endif %}
+
                         {% endfor %}
                         </tbody>
                     </table>

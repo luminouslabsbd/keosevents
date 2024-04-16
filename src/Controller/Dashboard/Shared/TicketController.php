@@ -286,14 +286,14 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         return $this->redirect($request->headers->get('referer'));
     }
 
-
+//  
     
-// $sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
-// FROM eventic_event_date
-// JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
-// WHERE eventic_event_date.event_id = :id";
+    $sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
+    FROM eventic_event_date
+    JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
+    WHERE eventic_event_date.event_id = :id";
 
-    $sql4 = "SELECT eventic_event_date.*,eventic_event_date.id as event_date_id FROM eventic_event_date WHERE event_id = :id";
+    // $sql4 = "SELECT eventic_event_date.*,eventic_event_date.id as event_date_id FROM eventic_event_date WHERE event_id = :id";
     $params4 = ['id' => $event];
     $statement4 = $connection->prepare($sql4);
     $statement4->execute($params4);
