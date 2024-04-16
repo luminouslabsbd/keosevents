@@ -21,10 +21,19 @@ use App\Entity\OrderTicket;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Component\HttpFoundation\Response;
+use App\Entity\OrderElement;
+use FOS\UserBundle\Model\UserManagerInterface;
 
 
 class TicketController extends Controller
 {
+    private $userManager;
+
+    public function __construct(UserManagerInterface $userManager) {
+        // For Sign Up 
+        $this->userManager = $userManager;
+    }
+
     public function sendTicket(Request $request, AppServices $services, TranslatorInterface $translator, Connection $connection, $event = null)
 {
     $sqlEvent = "SELECT * FROM eventic_event WHERE id = :id";
@@ -277,22 +286,21 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         return $this->redirect($request->headers->get('referer'));
     }
 
- // "SELECT * FROM eventic_event_date WHERE event_id = :id";
-    
-$sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
-FROM eventic_event_date
-JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
-WHERE eventic_event_date.event_id = :id";
 
+    
+// $sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
+// FROM eventic_event_date
+// JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
+// WHERE eventic_event_date.event_id = :id";
+
+    $sql4 = "SELECT eventic_event_date.*,eventic_event_date.id as event_date_id FROM eventic_event_date WHERE event_id = :id";
     $params4 = ['id' => $event];
     $statement4 = $connection->prepare($sql4);
     $statement4->execute($params4);
     $event_date = $statement4->fetch();
+
     $event_date_id = $event_date['event_date_id'];
-   // $event_date = $event_date['event_id'];
-    
-    
-//dd($event_date);
+
 
     if (!$event_date) {
         $this->addFlash('error', $translator->trans('The event date can not be found'));
@@ -319,117 +327,136 @@ WHERE eventic_event_date.event_id = :id";
     $ticketreference=$event_ticket['reference'];
     $em = $this->getDoctrine()->getManager();
     $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneByReference($ticketreference);
-   // $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneBy(['eventdate_id' => $event_date_id] );
-   // dd($event_ticket,$eventticket);
 
+    // For Create User As a attendee
+
+    
+ 
     foreach ($eventMails as $eventMail) {
         if ($eventMail['status'] == 0) {
-
             
+            $sql7 = "SELECT slug FROM eventic_user WHERE email = :email";
+            $params7 = ['email' => $eventMail['email']];
+            $statement7 = $connection->prepare($sql7);
+            $statement7->execute($params7);
+            $eventic_user = $statement7->fetch();
+
+            if(!empty($eventic_user)){
+                $user_slug = $eventic_user['slug'];
+            }else{
+                $user = $this->userManager->createUser();
+                $user->setEnabled(true);
+                $user->setFirstname($eventMail['name']);
+                $user->setLastname($eventMail['surname']);
+                $user->setUsername(strtolower($eventMail['name'].$eventMail['surname']));
+                $user->setUsernameCanonical(strtolower($eventMail['name'].$eventMail['surname']));
+                $user->setEmail($eventMail['email']);
+                $user->setEmailCanonical($eventMail['email']);
+                $user->setPlainPassword('12345678');
+                $user->setSlug($eventMail['name'].$eventMail['surname'].strtotime('now'));
+                $user->addRole('ROLE_ATTENDEE');
+                $this->userManager->updateUser($user);
+
+                $user_slug = $user->getSlug();
+            }
+
+            $user = $services->getUsers(array("slug" => $user_slug, "enabled" => "all"))->getQuery()->getOneOrNullResult();
+
+                
+            $order = new Order();
+            $order->setUser($user);
+            $order->setReference($services->generateReference(15));
+            $order->setStatus(0);
+        
+            $orderelement = new OrderElement();
+            $orderelement->setOrder($order);
+            $orderelement->setEventticket($eventticket);
+            $orderelement->setUnitprice(0.00);
+            $orderelement->setQuantity(1);
+            $order->addOrderelement($orderelement);
+
+            if ($user->hasRole("ROLE_ATTENDEE")) {
+                $order->setTicketFee($services->getSetting("ticket_fee_online"));
+                $order->setTicketPricePercentageCut($services->getSetting("online_ticket_price_percentage_cut"));
+            } else if ($user->hasRole("ROLE_POINTOFSALE")) {
+                $order->setTicketFee($services->getSetting("ticket_fee_pos"));
+                $order->setTicketPricePercentageCut($services->getSetting("pos_ticket_price_percentage_cut"));
+            }
+            $order->setCurrencyCcy($services->getSetting("currency_ccy"));
+            $order->setCurrencySymbol($services->getSetting("currency_symbol"));  
+                    
+            $order->setStatus(1);
+            $paymentGateway = $em->getRepository("App\Entity\PaymentGateway")->findOneBySlug("point-of-sale");
+            $gatewayFactoryName = "offline";
+            $order->setPaymentGateway($paymentGateway);
+            $em->persist($order);
+            foreach ($order->getOrderelements() as $orderElement) {
+                    $ticket = new OrderTicket();
+                    $ticket->setOrderElement($orderElement);
+                    $ticket->setReference($services->generateReference(20));
+                    $ticket->setScanned(false);
+                    $em->persist($ticket);
+            }
+            $storage = $this->get('payum')->getStorage('App\Entity\Payment');
+            $payment = $storage->create();
+            $payment->setOrder($order);
+            $payment->setNumber($services->generateReference(20));
+            $payment->setCurrencyCode($services->getSetting("currency_ccy"));
+            $payment->setTotalAmount("0.0"); // 1.23 USD = 123
+            $payment->setDescription($translator->trans("Payment of tickets purchased on %website_name%", array('%website_name%' => $services->getSetting("website_name"))));
+            $payment->setClientId($user->getId());
+            $payment->setFirstname($eventMail['name']);
+            $payment->setLastname($eventMail['surname']);
+            $payment->setClientEmail($eventMail['email']);
+            $payment->setState($eventMail['email']);
+            $payment->setCity($eventMail['city']);
+            $payment->setPostalcode('213344');
+            $payment->setStreet($eventMail['address']);
+            $payment->setStreet2($eventMail['address']);
             
+            $storage->update($payment);
+            $order->setPayment($payment);
+    
+    
+            $em->flush();   
+            $services->emptyCart($user);
+    
             
-                
-        $user = $services->getUsers(array("slug" =>'shojol81', "enabled" => "all"))->getQuery()->getOneOrNullResult();
+
+            $orderReference=$order->getReference();
+
+            $em->refresh($order);
+            $em->refresh($ticket);
+            $em->refresh($orderElement);
+
+            $pdfOptions = new Options();
+            $dompdf = new Dompdf($pdfOptions);
+
+            return $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+                'order' => $order,
+                'eventDateTicketReference' => 'all',
+                'link' => $link,
+            ]);
+
+            $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
+                'order' => $order,
+                'eventDateTicketReference' => 'all',
+                'link' => $link,
+            ]);
         
-        
-        $cartelement = new CartElement();
-        $cartelement->setUser($user);
-        $cartelement->setEventticket($eventticket);
-        $cartelement->setQuantity(intval(1));
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $ticketsPdfFile = $dompdf->output();
+            $emailTo=$eventMail['email'];
+            $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
+                    ->setFrom($services->getSetting('no_reply_email'))
+                    ->setTo($emailTo)
+                    ->setBody(
+                            $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $order]), 'text/html')
+                    ->attach(new \Swift_Attachment($ticketsPdfFile, $order->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
 
-        if ($user->hasRole("ROLE_ATTENDEE") && !$cartelement->getEventticket()->getFree()) {
-                    $cartelement->setTicketFee($services->getSetting("ticket_fee_online"));
-        } else if ($user->hasRole("ROLE_POINTOFSALE") && !$cartelement->getEventticket()->getFree()) {
-                    $cartelement->setTicketFee($services->getSetting("ticket_fee_pos"));
-        }
-                
-        $em->persist($cartelement);
-
-        
-       // dd("ok");
-        
-
-           
-                $order = $services->transformCartIntoOrder($user);
-                $order->setStatus(1);
-                $paymentGateway = $em->getRepository("App\Entity\PaymentGateway")->findOneBySlug("point-of-sale");
-                $gatewayFactoryName = "offline";
-                $order->setPaymentGateway($paymentGateway);
-                $em->persist($order);
-                foreach ($order->getOrderelements() as $orderElement) {
-                    for ($i = 1; $i <= $orderElement->getQuantity(); $i++) {
-                        $ticket = new OrderTicket();
-                        $ticket->setOrderElement($orderElement);
-                        $ticket->setReference($services->generateReference(20));
-                        $ticket->setScanned(false);
-                        $em->persist($ticket);
-                  
-                     }  
-                }
-
-              $storage = $this->get('payum')->getStorage('App\Entity\Payment');
-               $payment = $storage->create();
-                $payment->setOrder($order);
-                $payment->setNumber($services->generateReference(20));
-                $payment->setCurrencyCode($services->getSetting("currency_ccy"));
-                $payment->setTotalAmount("0.0"); // 1.23 USD = 123
-                $payment->setDescription($translator->trans("Payment of tickets purchased on %website_name%", array('%website_name%' => $services->getSetting("website_name"))));
-                    $payment->setClientId($user->getId());
-              
-                    $payment->setFirstname('fefefe');
-             
-              
-                    $payment->setLastname('fefefe');
-                
-           
-                    $payment->setClientEmail('test@gmail.com');
-                   // $payment->setCountry(3);
-                    $payment->setState('dedede');
-                    $payment->setCity('dedede');
-                    $payment->setPostalcode('dededr4fr');
-                    $payment->setStreet('refdrfr');
-                    $payment->setStreet2('rfrfcdede');
-                
-
-                $storage->update($payment);
-                $order->setPayment($payment);
-          
-          
-                $em->flush();   
-                $services->emptyCart($user);
-        
-                
-
-   $orderReference=$order->getReference();
-  
- $order = $services->getOrders(array("reference" =>$orderReference))->getQuery()->getOneOrNullResult();
-
-
-  $em->refresh($order);
-  $em->refresh($ticket);
- $em->refresh($orderElement);
-
-        $pdfOptions = new Options();
-        //$pdfOptions->set('defaultFont', 'Arial');
-        $dompdf = new Dompdf($pdfOptions);
-        $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
-            'order' => $order,
-            'eventDateTicketReference' => 'all',
-            'link' => $link,
-        ]);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        $ticketsPdfFile = $dompdf->output();
-        $emailTo=$eventMail['email'];
-        $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
-                ->setFrom($services->getSetting('no_reply_email'))
-                ->setTo($emailTo)
-                ->setBody(
-                        $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $order]), 'text/html')
-                ->attach(new \Swift_Attachment($ticketsPdfFile, $order->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
-
-        $mailer->send($email);
+            $mailer->send($email);
 
 
 //exit;
@@ -504,10 +531,9 @@ WHERE eventic_event_date.event_id = :id";
             // $statementUpdate->execute($paramsUpdate);
         }
     }
-        $responseContent="Invitation sent";
-       return new Response($responseContent);
     
-   // return $this->redirect($request->headers->get('referer'));
+    $this->addFlash('success', $translator->trans('Invitation Sent'));
+    return $this->redirect($request->headers->get('referer'));
 }
 
 
