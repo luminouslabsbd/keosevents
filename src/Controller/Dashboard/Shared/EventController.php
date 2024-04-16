@@ -76,8 +76,8 @@ class EventController extends Controller
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            // $file = $_FILES['subscriber_file'];
-            // dd($file);
+            $file = $_FILES['subscriber_file'];
+            
             if ($form->isValid()) {
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
@@ -90,13 +90,13 @@ class EventController extends Controller
                     $statement->execute($params);
                     $csv_info = $statement->fetchAll();
                 }
-                
-                
-                if (!$slug || $file['type'] != '') {
+
+                $csv_upload = true;
+                if (is_uploaded_file($file['tmp_name'])) {
                     $csv_upload = $this->event_mails_csv_check($event->getReference(), $input, $file, $entityManager);
                 }
 
-                if(($slug && $file['type'] == '') || $csv_upload ){
+                if($csv_upload){
                     foreach ($event->getImages() as $image) {
                         $image->setEvent($event);
                     }
@@ -115,10 +115,12 @@ class EventController extends Controller
                     if (!$slug) {
                         $event->setOrganizer($this->getUser()->getOrganizer());
                         $rr = $event->setReference($services->generateReference(10));
-                        $this->event_mails_data_save($rr->getReference(), $input, $file, $entityManager);
+                        if (is_uploaded_file($file['tmp_name'])) {
+                            $this->event_mails_data_save($rr->getReference(), $input, $file, $entityManager);
+                        }
                         $this->addFlash('success', $translator->trans('The event has been successfully created'));
                     } else {
-                        if ($file['type'] != '') {
+                        if (is_uploaded_file($file['tmp_name'])) {
                             $this->event_mails_data_edit($reference, $input,$csv_info, $file, $entityManager);
                         }
                         $this->addFlash('success', $translator->trans('The event has been successfully updated'));

@@ -62,6 +62,7 @@ security:
             switch_user: true
             access_denied_handler: App\Security\AccessDeniedHandler
 
+
     access_control:
         - { path: ^(.*?)/signin$, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^(.*?)/signup/attendee, role: IS_AUTHENTICATED_ANONYMOUSLY }

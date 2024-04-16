@@ -161,75 +161,74 @@ google_redirect:
     controller: App\Controller\Dashboard\Shared\ApiIntegrationController::googleMeetingRedirect
 
 zoom_api_setting:
-    path: /zoom/api/setting
+    path: /dashboard/organizer/zoom/api/setting
     controller: App\Controller\Dashboard\Organizer\AccountController::zoom_api_setting
 
 google_api_setting:
-    path: /google/api/setting
+    path: /dashboard/organizer/google/api/setting
     controller: App\Controller\Dashboard\Organizer\AccountController::google_api_setting
 
 chatbot_train_text:
-    path: /chatbot_train_text
+    path: /dashboard/organizer/chatbot_train_text
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_text'
     methods: ['GET']
 
 chatbot_train_attachment:
-    path: /chatbot_train_attachment
+    path: /dashboard/organizer/chatbot_train_attachment
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_attachment'
     methods: ['GET']
 
 chatbot_train_list:
-    path: /chatbot_train_list
+    path: /dashboard/organizer/chatbot_train_list
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_list'
     methods: ['GET']
 
 chatbot_train_list_store:
-    path: /chatbot_train_list_store
+    path: /dashboard/organizer/chatbot_train_list_store
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_list_store'
     methods: ['POST']
 
 chatbot_train_attachment_store:
-    path: /chatbot_train_attachment_store
+    path: /dashboard/organizer/chatbot_train_attachment_store
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::chatbot_train_attachment_store'
     methods: ['POST']
 
 delete_chatbot_list:
-    path: /delete_chatbot_list/{chatbotId}
+    path: /dashboard/organizer/delete_chatbot_list/{chatbotId}
     controller: 'App\Controller\Dashboard\ChatBot\ChatBotController::delete_chatbot_list'
     methods: ['GET']
 
 zoom_sdk_player:
-    path: /join_event_meeting/{reference?}
+    path: /dashboard/attendee/join_event_meeting/{reference?}
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
 
-
 send_tickets:
-    path: /send_tickets/{event?}
+    path: /dashboard/organizer/send_tickets/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicket'
     methods: ['GET']
 
 send_ticket_csv:
-    path: /send_ticket_csv/{event?}
+    path: /dashboard/organizer/send_ticket_csv/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::sendTicketCsv'
     methods: [ 'GET' ]
 
 send_ticket_for_whatsapp:
-    path: /send_ticket_for_whatsapp/{event?}
+    path: /dashboard/organizer/send_ticket_for_whatsapp/{event?}
     controller: 'App\Controller\Dashboard\Shared\TicketController::send_ticket_for_whatsapp'
     methods: [ 'GET' ]
 
 quiz_setting:
-    path: /quiz/setting/
+    path: /dashboard/organizer/quiz/setting/
     controller: 'App\Controller\Dashboard\Quiz\QuizController::quizSetting'
     methods: ['GET']
 
 start_quiz:
-    path: /start/quiz/{quiz}
+    path: /dashboard/organizer/start/quiz/{quiz}
     controller: 'App\Controller\Dashboard\Quiz\QuizController::startQuiz'
     methods: ['GET']
 close_quiz:
-    path: /close/quiz/{quiz}
+    path: /dashboard/organizer/close/quiz/{quiz}
     controller: 'App\Controller\Dashboard\Quiz\QuizController::closeQuiz'
     methods: ['GET']
 

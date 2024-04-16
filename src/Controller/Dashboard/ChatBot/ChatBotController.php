@@ -91,6 +91,7 @@ class ChatBotController extends Controller
 
     public function chatbot_train_list_store(Request $request, EntityManagerInterface $entityManager, TranslatorInterface $translator)
     {
+        
         $client = new Client();
         $data = $request->request->all();
         if ($data['bot_text'] != '') {
