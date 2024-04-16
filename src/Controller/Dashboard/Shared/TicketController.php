@@ -432,12 +432,6 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $pdfOptions = new Options();
             $dompdf = new Dompdf($pdfOptions);
 
-            return $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
-                'order' => $order,
-                'eventDateTicketReference' => 'all',
-                'link' => $link,
-            ]);
-
             $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 'order' => $order,
                 'eventDateTicketReference' => 'all',

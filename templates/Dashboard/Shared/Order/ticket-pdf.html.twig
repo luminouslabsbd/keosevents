@@ -5,191 +5,279 @@
 {% endif %}
 
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>{{ "Order"|trans({}, "messages", locale) }} #{{ order.reference }} - {{ "Tickets"|trans({}, "messages", locale) }}</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <style>
+<html lang="{% if app.request.locale == "ar" %}en{% else %}{{ app.request.locale }}{% endif %}">
 
-            *{ font-family: DejaVu Sans !important;}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>offline ticket</title>
+    <style>
+        /* Add your styles here */
+        body {
+            margin: 0 auto;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
 
-            table.bordered, table.bordered th, table.bordered td {
-                padding: 10px;
-                border: 1px solid #eee;
-                border-collapse: collapse;
-            }
-            table tr {
-                vertical-align: top;
-            }
-            table td {
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-            }
-            .text-center {
-                text-align: center;
-            }
-            .text-right {
-                text-align:right;
-            }
-            .tickets-container .ticket-wrapper {
-                page-break-inside: avoid;
-            }
-            .tickets-container .ticket-wrapper:not(:last-child) {
-                page-break-after: always;
-            }
-            .tickets-container .ticket-wrapper:not(:first-child) {
-                page-break-before: always;
-            }
-            .text-muted {
-                color: #777;
-            }
-            .footer {
-                position:absolute;
-                bottom:0;
-                width: 100%;
-            }
-            .scanned-ticket-stamp {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
+        .container {
+            width: 100%;
+            max-width: 475px;
+            margin: auto;
+            padding: 22px;
+        }
 
-            .qr-barcode-wrapper > div {
-                width: fit-content;
-                margin: 0 auto;
-            }
+        .logo {
+            text-align: center;
+            font-size: 33px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
 
-            .clearfix::after {
-                content: "";
-                clear: both;
-                display: table;
-            }
+        .logo img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+        }
 
-        </style>
-    </head>
-    <body>
-
-        <div class="tickets-container">
+        .ticket-details {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 300;
+            font-size: 16px;
+            padding-bottom: 30px;
         
-     
+        }
 
+        .event-name {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 35px;
+            padding-bottom: 60px;
+        }
 
-            {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference)  %}
+        .event-time {
+            font-size: 16px;
+            padding: 0px 75px;
+            padding-bottom: 0px;
+            border-bottom: 1px solid rgba(174, 168, 168, 0.709);
+            padding-bottom: 11px;
+            margin-bottom: 10px;
+            width: 40%;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
+        .ticket-image {
+            background: transparent url('{{ asset('assets/pdf-icon/ticket-image.png') }}') no-repeat;
+            background-size: cover;
+            background-position: center;
+            opacity: 1;
+            width: 100%;
+            height: 493px;
+            position: relative;
+        }
 
+        .ticket-date {
+            background-color: #3e7cf7;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: #3e7cf7 0px 4px 14px;
+            font-size: 20px;
+            padding: 13px 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            width: 170px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
+        .ticket-info-container{
+            margin-bottom: 30px;
+        }
 
+        .ticket-info-container::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
 
-                {% for ticket in orderElement.tickets %}
-                
-    
+        .ticket-info {
+            float: left;
+            width: 150px;
+            height: 70px;
+        }
 
+        .ticket-info p {
+            font-style: italic;
+            color: #808080;
+            font-size: 12px;
+            padding-bottom: 10px;
+        }
 
-                    <div class="ticket-wrapper">
+        .ticket-type {
+            font-size: 10px;
+            font-weight: 800;
+        }
 
-                        <div class="footer text-center text-muted">
-                            <div class="qr-barcode-wrapper">
-                                {{ barcode({code: order.reference, type: 'c128', format: 'html'}) }}
-                            </div>
-                            <br>
-                            {{ services.getSetting("website_url") }}
-                            <br>
-                            {{ services.getSetting("website_name") }} - {{ services.getSetting("website_description_" ~ locale) }}
-                        </div>
+        .link-online {
+            font-size: 23px;
+            padding-bottom: 20px;
+        }
 
-                        <table width="100%" class="bordered">
-                            <tbody>
+        .online-link {
+            font-size: 13px;
+            color: #d2cfd7;
+            margin-top: 20px;
+        }
 
-                                <tr style="background-color: {{ services.getSetting("primary_color") }}; color: #fff;">
-                                    <td width="50%">
-                                        <h5>{{ "Order"|trans({}, "messages", locale) }} #{{ order.reference }}</h3>
-                                    </td>
-                                    <td width="50%">
-                                        <h5>{{ "Ticket"|trans({}, "messages", locale) }} #{{ ticket.reference }}</h3>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="50%">
-                                        <h3>{{ orderElement.eventticket.eventdate.event.translate(locale).name }}</h3>
-                                        {% if orderElement.eventticket.eventdate.startdate %}
-                                            <h6><span class="text-muted">{{ "Start date"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.startdate|localizeddate('none', 'none', locale, date_timezone, date_format) }}</h6>
-                                            {% endif %}
-                                            {% if orderElement.eventticket.eventdate.enddate %}
-                                            <h6><span class="text-muted">{{ "End date"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.enddate|localizeddate('none', 'none', locale, date_timezone, date_format) }}</h6>
-                                            {% endif %}
-                                        <h6>
-                                            <span class="text-muted">{{ "Venue / Location"|trans({}, "messages", locale) }}</span><br>
-                                            {% if orderElement.eventticket.eventdate.venue %}
-                                                {{ orderElement.eventticket.eventdate.venue.translate(locale).name }}
-                                            {% else %}
-                                                {{ "Online"|trans({}, "messages", locale) }}
-                                                <br>
-                                                {% if link is not empty %}
-                                                    {{ link|trans({}, "messages", locale) }}
-                                                {% endif %}
-                                            {% endif %}
-                                        </h6>
+        .join-button {
+            background-color: #3e7cf7;
+            color: white;
+            text-decoration: none;
+            font-size: 17px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: block;
+            margin-top: 20px;
+            font-weight: 700;
+            width:80px;
+            margin-left: auto;
+            margin-right: auto;
 
-                                        <div class="clearfix" style="width: 100%">
-                                            {% if orderElement.eventticket.eventdate.event.organizer %}
-                                                <h6 style="float: left;"><span class="text-muted">{{ "Organizer"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.eventdate.event.organizer.name }}</h6>
-                                            {% endif %}
-                                            {% if not orderElement.eventticket.eventdate.venue %}
-                                                <a href="{{ link }}" style="float: right; background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 5px; text-decoration: none;">Join</a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    <td width="50%">
-                                        <h3>
-                                            {{ order.user.getCrossRoleName }}
-                                            {% if order.user.hasRole("ROLE_POINTOFSALE") and order.payment.firstname and order.payment.lastname %}
-                                                ({{ order.payment.firstname ~ " " ~ order.payment.lastname }})
-                                            {% endif %}
-                                        </h3>
-                                        <h6><span class="text-muted">{{ "Ticket type"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.name }}</h6>
-                                        <h6><span class="text-muted">{{ "Ticket price"|trans({}, "messages", locale) }}</span><br>{{ orderElement.eventticket.free ? "Free"|trans({}, "messages", locale) : ((services.getSetting('currency_position') == 'left' ? services.getSetting('currency_symbol') : '') ~ orderElement.displayUnitPrice() ~ (services.getSetting('currency_position') == 'right' ? services.getSetting('currency_symbol') : '')) }}</h6>
-                                            {% if order.getOrderElementsPriceSum(true) > 0 %}
-                                            <h6><span class="text-muted">{{ "Payment method"|trans({}, "messages", locale) }}</span><br>{{ order.paymentgateway.name }}</h6>
-                                            {% endif %}
-                                        <h6><span class="text-muted">{{ "Order date"|trans({}, "messages", locale) }}</span><br>
-                                            {% if order.payment.details["TIMESTAMP"] is defined %}
-                                                {{ order.payment.details["TIMESTAMP"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
-                                            {% elseif order.payment.details["created"] is defined %}
-                                                {{ order.payment.details["created"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
-                                            {% else %}
-                                
-                                            {% endif %}
-                                        </h6>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center" colspan="2">
-                                        <div class="qr-barcode-wrapper">
-                                            {{ barcode({code: ticket.reference, type: 'qrcode', format: 'html'}) }}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% if ticket.scanned %}
-                                    <tr>
-                                        <td class="text-center" colspan="2">
-                                            <br><br>
-                                            <img src=".{{ asset('assets/img/scanned-ticket-stamp.png') }}" height="150" />
+        }
 
-                                            <p class="text-center text-muted">{{ "This ticket was scanned at %scanDate%"|trans({"%scanDate%": ticket.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format)}, "messages", locale) }}</p>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+        .ticket-number {
+            font-size: 12px;
+            padding-top: 50px;
+            font-weight: 700;
+        }
+        .ticket-footer{
+            margin-top: 130px;
+        }
+        .ticket-footer small{
+            font-size: 10px;
+            
+        }
+        .qr-barcode-wrapper{
+            background-color: white;
+            margin: 0 auto;
+            margin-top: 30px;
+            padding: 10px;
+            width: 105px;
+            
+        }
+    </style>
+</head>
 
+<body>
+
+    {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference)  %}
+    {% for ticket in orderElement.tickets %}
+    <div class="container">
+        <div class="logo">
+
+            {{ orderElement.eventticket.eventdate.event.translate(locale).name }}
+ 
+        </div>
+        <div class="ticket-details">
+            {{ "Order"|trans({}, "messages", locale) }} #{{ order.reference }}
+        </div>
+        <div class="ticket-details">
+            ORGANIZER
+        </div>
+        <div class="event-name">
+           {{ orderElement.eventticket.eventdate.event.organizer.name }}
+        </div>
+        <div class="event-time">
+            BEGINS {{ orderElement.eventticket.eventdate.startdate|date('g:i A') }}
+        </div>
+        <div class="event-online">
+            
+            {% if orderElement.eventticket.eventdate.venue %}
+                ON-SITE
+            {% else %}
+                ONLINE
+            {% endif %}
+        </div>
+        
+        <div class="ticket-date">
+            {{ orderElement.eventticket.eventdate.startdate|date('F j / Y') }}
+        </div>
+        
+        <div class="ticket-info-container">
+            <div style="border-bottom: 1px solid rgba(174, 168, 168, 0.709); margin-bottom: 35px;"></div>
+            <div>
+                <h4> 
+                {{ order.user.getCrossRoleName }}
+                    {% if order.user.hasRole("ROLE_POINTOFSALE") and order.payment.firstname and order.payment.lastname %}
+                        ({{ order.payment.firstname ~ " " ~ order.payment.lastname }})
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="ticket-info" style="border-right: 1px solid white;">
+                <p>TICKET TYPE</p>
+                <div class="ticket-type">{{ orderElement.eventticket.name }}</div>
+            </div>
+            <div class="ticket-info" style="border-right: 1px solid white;">
+                <p>ORDER DATE</p>
+                <div class="ticket-type order-date">
+                     {{  order.createdAt|date('F j / Y') }}
+                </div>
+            </div>
+            <div class="ticket-info">
+                <p>TICKET PRICE</p>
+                <div class="ticket-type ticket-price">
+                    {{ orderElement.eventticket.free ? "FREE"|trans({}, "messages", locale) : ((services.getSetting('currency_position') == 'left' ? services.getSetting('currency_symbol') : '') ~ orderElement.displayUnitPrice() ~ (services.getSetting('currency_position') == 'right' ? services.getSetting('currency_symbol') : '')) }}
+                </div>
+            </div>
+        </div>
+        <div class="link-online">
+            LINK ONLINE
+        </div>
+        {% if orderElement.eventticket.eventdate.venue %}
+            
+            <div class="vanue-location">
+                <h3>ADDRESS</h3>
+                {{ orderElement.eventticket.eventdate.venue.translate(locale).name }}
+            </div>
+            <div class="vanue-qr-code">
+                <div class="qr-barcode-wrapper">
+                        {{ barcode({code: ticket.reference, type: 'qrcode', format: 'html'}) }}
                     </div>
+                    <small>SCAN HERE</small>
+            </div>
 
-                {% endfor %}
-                
-  
-            {% endfor %}
+            <style>
+            .ticket-number{
+                padding-top: 20px !important;
+            }
+            .ticket-footer{
+                margin-top: 10px !important;
+            }
+            </style>
+        {% else %}
+            {% if link is not empty %}
+               <a href="{{ link|trans({}, "messages", locale) }}" class="join-button" target="_blank">JOIN</a>
+            {% endif %}
+        {% endif %}
+        
+        <div class="ticket-number">
+            {{ "Ticket"|trans({}, "messages", locale) }} #{{ ticket.reference }}
         </div>
 
-    </body>
+        <div class="ticket-footer">
+            <small>https://www.keos.co/Keos - Event Management And Ticket Sales</small>
+        </div>
+    </div>
+    {% endfor %}
+    {% endfor %}
+</body>
+
 </html>
