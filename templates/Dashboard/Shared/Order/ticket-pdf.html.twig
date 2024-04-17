@@ -299,14 +299,14 @@
             </style>
         {% else %}
             {% if link is not empty %}
-            <div class="link-online">
+            {# <div class="link-online">
                 LINK ONLINE
             </div>
             <div class="online-link">
                 {% if link is not empty %}
                 {{ link|trans({}, "messages", locale) }}
                 {% endif %}
-            </div>
+            </div> #}
                <a href="{{ link|trans({}, "messages", locale) }}" class="join-button" target="_blank">JOIN</a>
             {% endif %}
         {% endif %}
