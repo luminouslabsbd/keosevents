@@ -361,8 +361,8 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             }
 
             $user = $services->getUsers(array("slug" => $user_slug, "enabled" => "all"))->getQuery()->getOneOrNullResult();
+            if ($user == null) continue;
 
-                
             $order = new Order();
             $order->setUser($user);
             $order->setReference($services->generateReference(15));
@@ -375,12 +375,14 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $orderelement->setQuantity(1);
             $order->addOrderelement($orderelement);
 
-            if ($user->hasRole("ROLE_ATTENDEE")) {
-                $order->setTicketFee($services->getSetting("ticket_fee_online"));
-                $order->setTicketPricePercentageCut($services->getSetting("online_ticket_price_percentage_cut"));
-            } else if ($user->hasRole("ROLE_POINTOFSALE")) {
-                $order->setTicketFee($services->getSetting("ticket_fee_pos"));
-                $order->setTicketPricePercentageCut($services->getSetting("pos_ticket_price_percentage_cut"));
+            if($user != null){
+                if ($user->hasRole("ROLE_ATTENDEE")) {
+                    $order->setTicketFee($services->getSetting("ticket_fee_online"));
+                    $order->setTicketPricePercentageCut($services->getSetting("online_ticket_price_percentage_cut"));
+                } else if ($user->hasRole("ROLE_POINTOFSALE")) {
+                    $order->setTicketFee($services->getSetting("ticket_fee_pos"));
+                    $order->setTicketPricePercentageCut($services->getSetting("pos_ticket_price_percentage_cut"));
+                }
             }
             $order->setCurrencyCcy($services->getSetting("currency_ccy"));
             $order->setCurrencySymbol($services->getSetting("currency_symbol"));  
