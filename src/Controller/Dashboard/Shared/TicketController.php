@@ -448,15 +448,20 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
             $ticketsPdfFile = $dompdf->output();
-            $emailTo=$eventMail['email'];
-            $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
-                    ->setFrom($services->getSetting('no_reply_email'))
-                    ->setTo($emailTo)
-                    ->setBody(
-                            $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $order]), 'text/html')
-                    ->attach(new \Swift_Attachment($ticketsPdfFile, $order->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
 
-            $mailer->send($email);
+            $emailTo=$eventMail['email'];
+            $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
+            // check email is valid or not 
+            if ((!preg_match($pattern, $emailTo))) {
+                $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
+                        ->setFrom($services->getSetting('no_reply_email'))
+                        ->setTo($emailTo)
+                        ->setBody(
+                                $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $order]), 'text/html')
+                        ->attach(new \Swift_Attachment($ticketsPdfFile, $order->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
+
+                $mailer->send($email);
+            }
 
 
 //exit;
