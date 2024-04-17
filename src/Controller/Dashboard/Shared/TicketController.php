@@ -452,7 +452,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $emailTo=$eventMail['email'];
             $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
             // check email is valid or not 
-            if ((!preg_match($pattern, $emailTo))) {
+            if ((preg_match($pattern, $emailTo))) {
                 $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
                         ->setFrom($services->getSetting('no_reply_email'))
                         ->setTo($emailTo)
