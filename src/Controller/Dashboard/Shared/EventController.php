@@ -76,8 +76,12 @@ class EventController extends Controller
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            $file = $_FILES['subscriber_file'];
-            
+
+            // $input = $request->request->all();
+            // $file = $_FILES['subscriber_file'];
+            // $this->event_mails_data_save($event->getReference(), $input, $file, $entityManager);
+            // exit;
+
             if ($form->isValid()) {
                 $input = $request->request->all();
                 $file = $_FILES['subscriber_file'];
@@ -175,22 +179,25 @@ class EventController extends Controller
                     $subscriber_list_id = $input['subscriber_id'];
                     $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
                     $send_chanel = $input['event']['sendchanel'] == 1 ? 'email' : 'whatsapp';
+
+                    $processedEmails = [];
                     foreach ($datas as $data) {
-                        if(isset($data['email']) && $data['email'] == ""){
+                        $email = $data['email'];
+                        if (in_array($email, $processedEmails)) {
                             continue;
                         }
-                        $data['name'];
-                        $data['surname'];
-                        $data['email'];
+                        $processedEmails[] = $email;
+                        $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
+
+                        if ((!preg_match($pattern, $data['email']))) {
+                            $sql = "INSERT INTO event_invalid_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                        } else {
+                            $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                        }
+
                         $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
                         $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
-                        $data['department'];
-                        $data['city'];
-                        $data['country'];
-                        $data['address'];
 
-                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
-                    VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
                         $params = [
                             'event_ref_id'       => $event_ref_id,
                             'send_type'          => $send_type,
@@ -206,10 +213,10 @@ class EventController extends Controller
                             'country'            => $data['country'],
                             'address'            => $data['address'],
                         ];
-
                         $statement = $entityManager->getConnection()->prepare($sql);
                     }
                     return true;
+
                 } else {
                     return false;
                 }
@@ -220,6 +227,7 @@ class EventController extends Controller
             return false;
         }
     }
+
     public function event_mails_data_save($event_ref_id, $input, $file, $entityManager)
     {
         try {
@@ -241,22 +249,25 @@ class EventController extends Controller
                     $subscriber_list_id = $input['subscriber_id'];
                     $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
                     $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
+
+                    $processedEmails = [];
                     foreach ($datas as $data) {
-                        if(isset($data['email']) && $data['email'] == ""){
-                            continue;
+                        $email = $data['email'];
+                        if (in_array($email, $processedEmails)) {
+                            continue; 
                         }
-                        $data['name'];
-                        $data['surname'];
-                        $data['email'];
+                        $processedEmails[] = $email;
+                        $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
+
+                        if ((!preg_match($pattern, $data['email']))) {
+                            $sql = "INSERT INTO event_invalid_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                        } else {
+                            $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                        }
+
                         $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
                         $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
-                        $data['department'];
-                        $data['city'];
-                        $data['country'];
-                        $data['address'];
 
-                        $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
-                        VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
                         $params = [
                             'event_ref_id'       => $event_ref_id,
                             'send_type'          => $send_type,
@@ -306,11 +317,38 @@ class EventController extends Controller
                         }
                         $datas[] = array_combine($headers, $row);
                     }
-                  
+                    fclose($handle);
+
+                    $processedEmails = [];
                     foreach ($datas as $newRow) {
+                        $email = $newRow['email'];
+                        if (in_array($email, $processedEmails)) {
+                            continue;
+                        }
+                        $processedEmails[] = $email;
+
                         $matched = false;
                         foreach ($csv_info as $existingRow) {
                             if ($existingRow['email'] == $newRow['email'] || $existingRow['phone_number'] == $newRow['phone_number']) {
+
+                                $country_code = preg_replace('/[^0-9]/', '', $newRow['country_code']);
+                                $phone_number = preg_replace('/[^0-9]/', '', $newRow['phone_number']);
+                                $updateSql = "UPDATE event_mails SET name = :name, surname = :surname, country_code = :country_code, phone_number = :phone_number, department = :department, city = :city, country = :country, address = :address WHERE email = :email";
+                                $updateParams = [
+                                    'name'         => $newRow['name'],
+                                    'surname'      => $newRow['surname'],
+                                    'country_code' => $country_code,
+                                    'phone_number' => $phone_number,
+                                    'department'   => $newRow['department'],
+                                    'city'         => $newRow['city'],
+                                    'country'      => $newRow['country'],
+                                    'address'      => $newRow['address'],
+                                    'email'        => $newRow['email']
+                                ];
+                                $updateStatement = $entityManager->getConnection()->prepare($updateSql);
+                                $success = $updateStatement->execute($updateParams);
+
+
                                 $matched = true;
                                 break;
                             }
@@ -319,29 +357,32 @@ class EventController extends Controller
                             $differences[] = $newRow;
                         }
                     }
-                
-                    fclose($handle);
+
+                    // Delete rows from event_invalid_mails where event_ref_id matches
+                    $deleteSql = "DELETE FROM event_invalid_mails WHERE event_ref_id = :event_ref_id";
+                    $deleteParams = ['event_ref_id' => $event_ref_id];
+                    $deleteStatement = $entityManager->getConnection()->prepare($deleteSql);
+                    $deleteStatement->execute($deleteParams);
+
                 
                     if(!empty($differences)){
                         $subscriber_list_id = $input['subscriber_id'];
                         $send_type = $input['event']['sendevent'] == 1 ? 'corporate' : 'massive';
                         $send_chanel = $input['event']['sendchanel'] == 1 ? 'whatsapp' : 'email';
                         foreach ($differences as $data) {
-                            if(isset($data['email']) && $data['email'] == ""){
-                                continue;
-                            }
-                            $data['name'];
-                            $data['surname'];
-                            $data['email'];
+           
                             $country_code = preg_replace('/[^0-9]/', '', $data['country_code']);
                             $phone_number = preg_replace('/[^0-9]/', '', $data['phone_number']);
-                            $data['department'];
-                            $data['city'];
-                            $data['country'];
-                            $data['address'];
 
-                            $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
-                            VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                            $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
+                            if ((!preg_match($pattern, $data['email']))) {
+                                $sql = "INSERT INTO event_invalid_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
+                                VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                            } else {
+                                $sql = "INSERT INTO event_mails (event_ref_id, send_type, send_chanel,subscriber_list_id, name, surname, email, country_code, phone_number, department, city, country,address) 
+                                VALUES (:event_ref_id, :send_type, :send_chanel,:subscriber_list_id, :name, :surname, :email, :country_code, :phone_number, :department, :city, :country,:address)";
+                            }
+                            
                             $params = [
                                 'event_ref_id'       => $event_ref_id,
                                 'send_type'          => $send_type,

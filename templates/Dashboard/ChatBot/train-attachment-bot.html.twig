@@ -105,19 +105,23 @@
 
                                 <div class="col-md-6">
                                     <div class="row">
+
                                         <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Trained Chatbot</label>
-                                                <select class="form-control" name="bot_list" id="bot_list" required>
-                                                    <option value="" disabled selected>Select a chatbot</option>
-                                                    {% for chat_bot_list in chat_bot_lists %}
-                                                        <option value="{{ chat_bot_list['id'] }}">{{ chat_bot_list['name'] }} </option> 
-                                                    {% endfor %}
-                                                </select>
+                                            <div class="custom_div">
+                                                <h5>Trained Chatbot</h5>
+                                                <div class="form-group">
+                                                    <select class="form-control" name="bot_list" id="bot_list" required>
+                                                        <option value="" disabled selected>Select a chatbot</option>
+                                                        {% for chat_bot_list in chat_bot_lists %}
+                                                            <option value="{{ chat_bot_list['id'] }}">{{ chat_bot_list['name'] }} </option> 
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
+
                                         <div class="col-md-6">
-                                            <div class="">
+                                            <div class="custom_div">
                                                 <h5>Trained Chatbot List</h5>
                                                 <ul class="navbar-nav mr-auto">
                                                     <li class="nav-item dropdown " >
@@ -139,6 +143,16 @@
                                                 </ul>
                                             </div>
                                         </div>
+
+                                        <div class="col-md-6">
+                                            <div class="custom_div">
+                                                <h5>Embed code for web</h5>
+                                                <div class="form-group">
+                                                    <button type="button" class="btn btn-info rounded embed_btn">Embed</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                                 
@@ -149,6 +163,27 @@
             </div>
         </div>
     </section>
+
+    <!-- Chatbot code embed modal -->
+    <div class="modal fade bd-example-modal-lg" id="embed_modal" tabindex="-1" role="dialog" aria-labelledby="embed_modal_title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Embed code in website</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 {% endblock %}
 
@@ -180,31 +215,11 @@
             $(document).on('click', '.remove_btn', function(){
                 $(this).parent().remove()
             })
+
+            // embed code script
+            $(document).on('click', '.embed_btn', function(){
+                $('#embed_modal').modal('show')
+            })
         })
-
-        {# $(document).ready(function() {
-            $('.delete_chatbot_btn').click(function(e) {
-                e.preventDefault();
-                var chatbotId = $(this).data('id');
-                alert(chatbotId)
-                $.ajax({
-                    url: "{{ path('delete_chatbot_list', { id: chatbotId }) }}",
-                    type: 'DELETE',
-                    success: function(response) {
-                        $('#bot_list option[value="' + chatbotId + '"]').remove();
-                        $(this).parent().remove();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Failed to delete chatbot:', error);
-                    }
-                });
-            });
-        }); #}
-
-
-
-       
-
-
     </script>
 {% endblock %}
