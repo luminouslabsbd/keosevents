@@ -210,33 +210,31 @@ class TicketController extends Controller
         }
         $eventDateTicketReference = $request->query->get('event', 'all');
 
-        // return $this->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
-        //     'order' => $orders,
-        //     'eventDateTicketReference' => $eventDateTicketReference,
-        //     'link' => $link,
-        // ]);
+            $pdfOptions = new Options();
+            $dompdf = new Dompdf($pdfOptions);
 
-
-        // Send Email
-        $email = new \Swift_Message($translator->trans("Mail server test email"));
-        $email->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
-            ->setTo($user['email'])
-            ->setBody($templating->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
+            $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 'order' => $orders,
                 'eventDateTicketReference' => $eventDateTicketReference,
                 'link' => $link,
-            ]), 'text/html');
-        try {
-            $result = $mailer->send($email);
-            if ($result == 0) {
-                $this->addFlash('danger', $translator->trans("The email could not be sent"));
-            } else {
-                $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $user['email']);
-            }
-        } catch (\Exception $e) {
-            $this->addFlash('danger', $translator->trans("The email could not be sent"));
-        }
-        return $this->redirect($request->headers->get('referer'));
+            ]);
+        
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $ticketsPdfFile = $dompdf->output();
+            $emailTo=$user['email'];
+            $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
+                    ->setFrom($services->getSetting('no_reply_email'))
+                    ->setTo($emailTo)
+                    ->setBody(
+                            $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $orders]), 'text/html')
+                    ->attach(new \Swift_Attachment($ticketsPdfFile, $orders->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
+
+            $mailer->send($email);
+
+            $this->addFlash('success', $translator->trans('Invitation Sent'));
+            return $this->redirect($request->headers->get('referer'));
     }
 
 
@@ -286,14 +284,14 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
         return $this->redirect($request->headers->get('referer'));
     }
 
-//  
-    
-    $sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
-    FROM eventic_event_date
-    JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
-    WHERE eventic_event_date.event_id = :id";
 
-    // $sql4 = "SELECT eventic_event_date.*,eventic_event_date.id as event_date_id FROM eventic_event_date WHERE event_id = :id";
+    
+// $sql4 ="SELECT eventic_event_date.*,eventic_event_date.id as event_date_id ,eventic_venue.*
+// FROM eventic_event_date
+// JOIN eventic_venue ON eventic_event_date.venue_id = eventic_venue.id
+// WHERE eventic_event_date.event_id = :id";
+
+    $sql4 = "SELECT eventic_event_date.*,eventic_event_date.id as event_date_id FROM eventic_event_date WHERE event_id = :id";
     $params4 = ['id' => $event];
     $statement4 = $connection->prepare($sql4);
     $statement4->execute($params4);
