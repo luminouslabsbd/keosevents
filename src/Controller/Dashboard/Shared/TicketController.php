@@ -47,7 +47,7 @@ class TicketController extends Controller
         return $this->redirect($request->headers->get('referer'));
     }
 
-    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+    $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
 
     if (!$link) {
         $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -146,7 +146,7 @@ class TicketController extends Controller
             return $this->redirect($request->headers->get('referer'));
         }
 
-        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -210,33 +210,31 @@ class TicketController extends Controller
         }
         $eventDateTicketReference = $request->query->get('event', 'all');
 
-        // return $this->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
-        //     'order' => $orders,
-        //     'eventDateTicketReference' => $eventDateTicketReference,
-        //     'link' => $link,
-        // ]);
+            $pdfOptions = new Options();
+            $dompdf = new Dompdf($pdfOptions);
 
-
-        // Send Email
-        $email = new \Swift_Message($translator->trans("Mail server test email"));
-        $email->setFrom($services->getSetting('no_reply_email'), $services->getSetting('website_name'))
-            ->setTo($user['email'])
-            ->setBody($templating->render('Dashboard/Shared/SendTicket/mailEventTickets.html.twig',[
+            $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 'order' => $orders,
                 'eventDateTicketReference' => $eventDateTicketReference,
                 'link' => $link,
-            ]), 'text/html');
-        try {
-            $result = $mailer->send($email);
-            if ($result == 0) {
-                $this->addFlash('danger', $translator->trans("The email could not be sent"));
-            } else {
-                $this->addFlash('success', $translator->trans("The test email has been sent, please check the inbox of") . " " . $user['email']);
-            }
-        } catch (\Exception $e) {
-            $this->addFlash('danger', $translator->trans("The email could not be sent"));
-        }
-        return $this->redirect($request->headers->get('referer'));
+            ]);
+        
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $ticketsPdfFile = $dompdf->output();
+            $emailTo=$user['email'];
+            $email = (new \Swift_Message($translator->trans('Your tickets bought from') . ' ' . $services->getSetting('website_name')))
+                    ->setFrom($services->getSetting('no_reply_email'))
+                    ->setTo($emailTo)
+                    ->setBody(
+                            $this->renderView('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $orders]), 'text/html')
+                    ->attach(new \Swift_Attachment($ticketsPdfFile, $orders->getReference() . "-" . $translator->trans("tickets") . '.pdf', 'application/pdf'));
+
+            $mailer->send($email);
+
+            $this->addFlash('success', $translator->trans('Invitation Sent'));
+            return $this->redirect($request->headers->get('referer'));
     }
 
 
@@ -255,7 +253,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
 
     $ref_id = $event_info['reference'];
 
-    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$ref_id;
+    $link = $_ENV['MAIN_DOMAIN'].'dashboard/attendee/join_event_meeting/'.$ref_id;
 
     if (!$link) {
         $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -341,6 +339,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $statement7->execute($params7);
             $eventic_user = $statement7->fetch();
             $user_name = strtolower($eventMail['name'].$eventMail['surname']).strtotime('now');
+            $user_link_slug = '';
             if(!empty($eventic_user)){
                 $user_slug = $eventic_user['slug'];
             }else{
@@ -358,6 +357,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
                 $this->userManager->updateUser($user);
 
                 $user_slug = $user->getSlug();
+                $user_link_slug = $user_slug;
             }
 
             $user = $services->getUsers(array("slug" => $user_slug, "enabled" => "all"))->getQuery()->getOneOrNullResult();
@@ -432,6 +432,10 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $pdfOptions = new Options();
             $dompdf = new Dompdf($pdfOptions);
 
+            if($user_link_slug !== ''){
+                $link = $link.'?ud='.$user_link_slug;
+            }
+
             $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 'order' => $order,
                 'eventDateTicketReference' => 'all',
@@ -460,7 +464,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
        
     //  $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
 
-    // $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+    // $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
     // $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
     //             'order' => $order,
     //             'eventDateTicketReference' => $eventDateTicketReference,
@@ -549,7 +553,7 @@ public function send_ticket_for_whatsapp(Request $request, AppServices $services
 
         $ref_id = $event_info['reference'];
 
-        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $ref_id;
+        $link = $_ENV['MAIN_DOMAIN'] . '/dashboard/attendee/join_event_meeting/' . $ref_id;
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));

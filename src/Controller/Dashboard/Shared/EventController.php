@@ -518,19 +518,20 @@ class EventController extends Controller
         
         $eventDate = $event->getEventDates()->toArray();
         $meeting_id =  isset($eventDate[0]) ? $eventDate[0]->getMeetinglink() : null;
+        $meeting_link = '';
+        
+        if (!empty($meeting_id) or $meeting_id != null) {
+            $sql = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
+            $params = ['id' => $meeting_id];
+            $statement = $connection->prepare($sql);
+            $statement->execute($params);
+            $event_meeting = $statement->fetch();
 
-        $sql = "SELECT * FROM event_zoom_meeting_list WHERE id = :id";
-        $params = ['id' => $meeting_id];
-        $statement = $connection->prepare($sql);
-        $statement->execute($params);
-        $event_meeting = $statement->fetch();
-
-        $meeting_link = $event_meeting['start_url'];
-
-        if (!$meeting_link) {
-            $this->addFlash('error', $translator->trans('The Host Join can not be found'));
-            return $this->redirect($request->headers->get('referer'));
+            if (!empty($event_meeting) or $event_meeting != null) {
+                $meeting_link = $event_meeting['start_url'];
+            }
         }
+
     
 
         return $this->render('Dashboard/Shared/Event/details.html.twig', [

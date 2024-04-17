@@ -13,6 +13,21 @@ class ZoomSdkController extends Controller
   public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator, $reference)
 
   {
+//     $ud = $request->query->get('ud') ?? null;
+
+//     if($ud != null){
+
+//       $sql3 = "SELECT slug, email, firstname, lastname FROM eventic_user WHERE slug = :slug";
+//         $params3 = ['slug' => $ud];
+//         $statement3 = $connection->prepare($sql3);
+//         $statement3->execute($params3);
+//         $user = $statement3->fetch();
+// dd($user);
+
+//       return $this->render('Front/Luminous/set_password.html.twig',[
+//         'user' => $user,
+//       ]);
+//     }
 
     $ErrorBackUrl = $_ENV['MAIN_DOMAIN'].'en/dashboard/attendee/my-tickets';
 
