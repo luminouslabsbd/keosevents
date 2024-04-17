@@ -31,13 +31,18 @@
 
         .logo {
             text-align: center;
-            font-size: 33px;
-            font-weight: 900;
+            font-size: 18px;
+            font-weight: 600;
             margin-bottom: 30px;
-            display: flex;
+            display: block;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            white-space: nowrap;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
         }
 
         .logo img {
@@ -170,7 +175,7 @@
             margin: 0 auto;
             margin-top: 30px;
             padding: 10px;
-            width: 105px;
+            width: 125px;
             
         }
     </style>

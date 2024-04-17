@@ -89,8 +89,10 @@
                         </tr>
                         </thead>
                         <tbody>
+                        {% if orders is not null %}
+
                         {% for order in orders %}
-                        {% if order.orderelements is not null %}
+                        {% if order is not null %}
                             {% for orderElement in order.orderelements if (eventDateTicketReference == "all" or eventDateTicketReference == orderElement.eventticket.reference) and (is_granted("ROLE_ADMINISTRATOR") or is_granted("ROLE_ATTENDEE") or (is_granted("ROLE_ORGANIZER") and orderElement.belongsToOrganizer(app.user.organizer.slug)) or (is_granted("ROLE_POINTOFSALE") and orderElement.belongsToOrganizer(app.user.pointofsale.organizer.slug))) %}
                                 {% for ticket in orderElement.tickets %}
                                     <tr>
@@ -177,7 +179,9 @@
                                                                             {% elseif order.payment.details["created"] is defined %}
                                                                                 {{ order.payment.details["created"]|localizeddate('none', 'none', locale, date_timezone, date_format) }}
                                                                             {% else %}
-                                                                                {{ order.payment.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                                                            {% if order.payment is not null %}
+                                                                                 {{ order.payment.updatedAt|localizeddate('none', 'none', locale, date_timezone, date_format) }}
+                                                                            {% endif %}
                                                                             {% endif %}
                                                                         </h6>
                                                                     </td>
@@ -218,6 +222,7 @@
                         {% endif %}
 
                         {% endfor %}
+                        {% endif %}
                         </tbody>
                     </table>
                 </div>

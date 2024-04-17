@@ -340,7 +340,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $statement7 = $connection->prepare($sql7);
             $statement7->execute($params7);
             $eventic_user = $statement7->fetch();
-
+            $user_name = strtolower($eventMail['name'].$eventMail['surname']).strtotime('now');
             if(!empty($eventic_user)){
                 $user_slug = $eventic_user['slug'];
             }else{
@@ -348,8 +348,8 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
                 $user->setEnabled(true);
                 $user->setFirstname($eventMail['name']);
                 $user->setLastname($eventMail['surname']);
-                $user->setUsername(strtolower($eventMail['name'].$eventMail['surname']));
-                $user->setUsernameCanonical(strtolower($eventMail['name'].$eventMail['surname']));
+                $user->setUsername($user_name);
+                $user->setUsernameCanonical($user_name);
                 $user->setEmail($eventMail['email']);
                 $user->setEmailCanonical($eventMail['email']);
                 $user->setPlainPassword('12345678');
