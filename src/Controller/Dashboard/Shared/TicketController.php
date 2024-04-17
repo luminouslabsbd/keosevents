@@ -47,7 +47,7 @@ class TicketController extends Controller
         return $this->redirect($request->headers->get('referer'));
     }
 
-    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+    $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
 
     if (!$link) {
         $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -146,7 +146,7 @@ class TicketController extends Controller
             return $this->redirect($request->headers->get('referer'));
         }
 
-        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -253,7 +253,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
 
     $ref_id = $event_info['reference'];
 
-    $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$ref_id;
+    $link = $_ENV['MAIN_DOMAIN'].'dashboard/attendee/join_event_meeting/'.$ref_id;
 
     if (!$link) {
         $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -339,6 +339,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $statement7->execute($params7);
             $eventic_user = $statement7->fetch();
             $user_name = strtolower($eventMail['name'].$eventMail['surname']).strtotime('now');
+            $user_link_slug = '';
             if(!empty($eventic_user)){
                 $user_slug = $eventic_user['slug'];
             }else{
@@ -356,6 +357,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
                 $this->userManager->updateUser($user);
 
                 $user_slug = $user->getSlug();
+                $user_link_slug = $user_slug;
             }
 
             $user = $services->getUsers(array("slug" => $user_slug, "enabled" => "all"))->getQuery()->getOneOrNullResult();
@@ -430,6 +432,10 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
             $pdfOptions = new Options();
             $dompdf = new Dompdf($pdfOptions);
 
+            if($user_link_slug !== ''){
+                $link = $link.'?ud='.$user_link_slug;
+            }
+
             $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 'order' => $order,
                 'eventDateTicketReference' => 'all',
@@ -458,7 +464,7 @@ public function sendTicketCsv(Request $request, AppServices $services, Translato
        
     //  $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
 
-    // $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
+    // $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
     // $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
     //             'order' => $order,
     //             'eventDateTicketReference' => $eventDateTicketReference,
@@ -547,7 +553,7 @@ public function send_ticket_for_whatsapp(Request $request, AppServices $services
 
         $ref_id = $event_info['reference'];
 
-        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $ref_id;
+        $link = $_ENV['MAIN_DOMAIN'] . '/dashboard/attendee/join_event_meeting/' . $ref_id;
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));
