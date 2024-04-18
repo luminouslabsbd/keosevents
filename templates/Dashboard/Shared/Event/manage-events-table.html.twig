@@ -86,6 +86,8 @@
 
                                     <a href="{{ path('send_ticket_for_whatsapp', { event : event.id }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-envelope fa-fw text-muted"></i> {{ "Send tickets using whatsapp"|trans }} </a>
 
+                                    <a href="{{ path('csv_users_list', { event_ref : event.reference }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-list fa-fw text-muted"></i> {{ "CSV users list"|trans }} </a>
+
                                     {% if event.published %}
                                         <a href="{{ path('dashboard_organizer_event_draft', { slug : event.slug }) }}" class="dropdown-item"><i class="dropdown-icon fas fa-eye-slash fa-fw text-muted"></i> {{ "Draft"|trans }}</a>
                                     {% else %}

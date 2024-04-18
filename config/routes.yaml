@@ -220,6 +220,11 @@ send_ticket_for_whatsapp:
     controller: 'App\Controller\Dashboard\Shared\TicketController::send_ticket_for_whatsapp'
     methods: [ 'GET' ]
 
+csv_users_list:
+    path: /dashboard/organizer/csv_users_list/{event_ref}
+    controller: 'App\Controller\Dashboard\Shared\TicketController::csv_users_list'
+    methods: [ 'GET' ]
+
 quiz_setting:
     path: /dashboard/organizer/quiz/setting/
     controller: 'App\Controller\Dashboard\Quiz\QuizController::quizSetting'
