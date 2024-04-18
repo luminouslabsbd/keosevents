@@ -227,7 +227,7 @@ class TicketController extends Controller
         $dompdf->render();
         $ticketsPdfFile = $dompdf->output();
         $emailTo = $user['email'];
-        $email_subject_title = $user['firstname'] . ' ' . $user['lastname'] . ', we are waiting for you at ' . $orders->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
+        $email_subject_title = $user['firstname'] . ' ' . $user['lastname'] . ', te estamos esperando en ' . $orders->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
         $email = (new \Swift_Message($email_subject_title))
             ->setFrom($services->getSetting('no_reply_email'))
             ->setTo($emailTo)
@@ -454,7 +454,7 @@ class TicketController extends Controller
                 $ticketsPdfFile = $dompdf->output();
 
                 $emailTo = $eventMail['email'];
-                $email_subject_title = $user->getFirstname() . ' ' . $user->getLastname() . ', we are waiting for you at ' . $order->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
+                $email_subject_title = $user->getFirstname() . ' ' . $user->getLastname() . ', te estamos esperando en ' . $order->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
                 $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
                 // check email is valid or not 
                 
