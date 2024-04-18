@@ -48,7 +48,7 @@ class TicketController extends Controller
             return $this->redirect($request->headers->get('referer'));
         }
 
-        $link = $_ENV['MAIN_DOMAIN'] . '/dashboard/attendee/join_event_meeting/' . $one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $one_event['reference'];
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -147,7 +147,7 @@ class TicketController extends Controller
             return $this->redirect($request->headers->get('referer'));
         }
 
-        $link = $_ENV['MAIN_DOMAIN'] . '/dashboard/attendee/join_event_meeting/' . $one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $one_event['reference'];
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));
@@ -257,12 +257,8 @@ class TicketController extends Controller
 
         $ref_id = $event_info['reference'];
 
-        $link = $_ENV['MAIN_DOMAIN'] . 'dashboard/attendee/join_event_meeting/' . $ref_id;
+        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $ref_id;
 
-        if (!$link) {
-            $this->addFlash('error', $translator->trans('The event Link can not be found'));
-            return $this->redirect($request->headers->get('referer'));
-        }
 
         $user_id = $event_info['organizer_id'];
 
@@ -343,12 +339,14 @@ class TicketController extends Controller
                 $statement7->execute($params7);
                 $eventic_user = $statement7->fetch();
                 $user_name = strtolower($eventMail['name'] . $eventMail['surname']) . strtotime('now');
-                $user_link_slug = '';
+                $user_link_slug = false;
+
                 if (!empty($eventic_user)) {
                     $user_slug = $eventic_user['slug'];
                 } else {
                     $user = $this->userManager->createUser();
                     $user->setEnabled(true);
+                    $user->setCsvStatus(true);
                     $user->setFirstname($eventMail['name']);
                     $user->setLastname($eventMail['surname']);
                     $user->setUsername($user_name);
@@ -358,9 +356,11 @@ class TicketController extends Controller
                     $user->setPlainPassword('12345678');
                     $user->setSlug($eventMail['name'] . $eventMail['surname'] . strtotime('now'));
                     $user->addRole('ROLE_ATTENDEE');
+                    $csvEnabled = true;
                     $this->userManager->updateUser($user);
 
                     $user_slug = $user->getSlug();
+
                     $user_link_slug = $user_slug;
                 }
 
@@ -438,7 +438,7 @@ class TicketController extends Controller
                 $pdfOptions = new Options();
                 $dompdf = new Dompdf($pdfOptions);
 
-                if ($user_link_slug !== '') {
+                if ($user_link_slug != false) {
                     $link = $link . '?ud=' . $user_link_slug;
                 }
 
@@ -452,10 +452,12 @@ class TicketController extends Controller
                 $dompdf->setPaper('A4', 'portrait');
                 $dompdf->render();
                 $ticketsPdfFile = $dompdf->output();
+
                 $emailTo = $eventMail['email'];
                 $email_subject_title = $user->getFirstname() . ' ' . $user->getLastname() . ', we are waiting for you at ' . $order->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
                 $pattern = "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
                 // check email is valid or not 
+                
                 if ((preg_match($pattern, $emailTo))) {
                     $email = (new \Swift_Message($email_subject_title))
                         ->setFrom($services->getSetting('no_reply_email'))
@@ -474,7 +476,7 @@ class TicketController extends Controller
                 // dd($order->getReference());
                 //  $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
 
-                // $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
+                // $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
                 // $html = $this->renderView('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 //             'order' => $order,
                 //             'eventDateTicketReference' => $eventDateTicketReference,
@@ -562,7 +564,7 @@ class TicketController extends Controller
 
         $ref_id = $event_info['reference'];
 
-        $link = $_ENV['MAIN_DOMAIN'] . '/dashboard/attendee/join_event_meeting/' . $ref_id;
+        $link = $_ENV['MAIN_DOMAIN'] . 'join_event_meeting/' . $ref_id;
 
         if (!$link) {
             $this->addFlash('error', $translator->trans('The event Link can not be found'));

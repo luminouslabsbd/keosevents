@@ -33,6 +33,9 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+
 
 use App\Form\RegistrationType;
 
@@ -45,8 +48,10 @@ class LuminousController extends Controller {
     private $userManager;
     private $tokenStorage;
     private $services;
+    private $translator;
+    private $connection;
 
-    public function __construct(CsrfTokenManagerInterface $tokenManager = null, FactoryInterface $formFactory,EventDispatcherInterface $eventDispatcher,  UserManagerInterface $userManager, TokenStorageInterface $tokenStorage, AppServices $services) {
+    public function __construct(CsrfTokenManagerInterface $tokenManager = null, FactoryInterface $formFactory,EventDispatcherInterface $eventDispatcher,  UserManagerInterface $userManager, TokenStorageInterface $tokenStorage, AppServices $services,TranslatorInterface $translator, Connection $connection) {
         // For Login 
         $this->tokenManager = $tokenManager;
         // For Sign Up 
@@ -55,6 +60,8 @@ class LuminousController extends Controller {
         $this->userManager = $userManager;
         $this->tokenStorage = $tokenStorage;
         $this->services = $services;
+        $this->translator = $translator;
+        $this->connection = $connection;
 
     }
 
@@ -261,5 +268,44 @@ class LuminousController extends Controller {
         ));
     }
 
+    /**
+     * @Route("/luminous/set_password", name="set_password")
+    */
+
+    public function setPassword(Request $request) {
+        $ud = $_REQUEST['ud'] ?? null;
+        $password = $_REQUEST['_password'] ?? null;
+        $confirm_password = $_REQUEST['_confirm-password'] ?? null;
+
+        if($ud != null){
+    
+          $sql3 = "SELECT * FROM eventic_user WHERE slug = :slug";
+            $params3 = ['slug' => $ud];
+            $statement3 = $this->connection->prepare($sql3);
+            $statement3->execute($params3);
+            $user = $statement3->fetch();
+    
+            if ($user) {
+                $user = $this->userManager->findUserByEmail($user['email']);
+                $user->setEnabled(true);
+                if ($password !== null && $confirm_password !== null && $password === $confirm_password) {
+                    $user->setPassword($password);
+                    $user->setPlainPassword($password);
+                    $this->userManager->updateUser($user);
+                    $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+                    $this->container->get('security.token_storage')->setToken($token);
+                    $this->addFlash('success', $this->translator->trans('Password Setup successfully!'));
+                    return $this->redirectToRoute('dashboard_index');
+                } else {
+                    $this->addFlash('error', $this->translator->trans('Passwords do not match!'));
+                    return $this->redirect($request->headers->get('referer'));
+                }
+            } else {
+                $this->addFlash('error', $this->translator->trans('Undefined User!!!'));
+                return $this->redirect($request->headers->get('referer'));
+            }  
+        }
+        return $this->redirectToRoute('dashboard_index');
+    }
 
 }

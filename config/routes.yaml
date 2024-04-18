@@ -199,11 +199,11 @@ delete_chatbot_list:
     methods: ['GET']
 
 zoom_sdk_player:
-    path: /dashboard/attendee/join_event_meeting/{reference?}
+    path: join_event_meeting/{reference?}
     controller: 'App\Controller\Dashboard\ZoomSdk\ZoomSdkController::zoomSdkPlayer'
     methods: ['GET']
-    defaults:
-        ud: null
+    # defaults:
+    #     ud: null
 
 send_tickets:
     path: /dashboard/organizer/send_tickets/{event?}

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class ZoomSdkController extends Controller
 {
@@ -19,8 +20,7 @@ class ZoomSdkController extends Controller
     $this->tokenManager = $tokenManager;
   }
 
-  public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator, $reference)
-
+  public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator,AuthorizationCheckerInterface $authChecker, $reference)
   {
     $ErrorBackUrl = $_ENV['MAIN_DOMAIN'].'en/dashboard/attendee/my-tickets';
 
@@ -47,6 +47,9 @@ class ZoomSdkController extends Controller
       ]);
     }
 
+    if (!$authChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+      return $this->redirectToRoute('ll_signin');
+    }
     $sqlEvent = "SELECT * FROM eventic_event WHERE reference = :reference";
     $paramsEvent = ['reference' => $reference];
     $statementEvent = $connection->prepare($sqlEvent);

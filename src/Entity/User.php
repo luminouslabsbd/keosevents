@@ -110,10 +110,17 @@ class User extends BaseUser implements UserInterface {
      * @ORM\Column(length=30, unique=true)
      */
     protected $slug;
-
+    
     /**
-     * @ORM\Column(type="string", length=50, nullable=true)
+     * @ORM\Column(type="integer", length=11, options={"default": 0})
      */
+
+    private $csv_status;
+
+
+     /**
+      * @ORM\Column(type="string", length=50, nullable=true)
+      */
     private $street;
 
     /**
@@ -473,6 +480,16 @@ class User extends BaseUser implements UserInterface {
 
     public function setSlug($slug) {
         $this->slug = $slug;
+
+        return $this;
+    }
+
+    public function getCsvStatus() {
+        return $this->csv_status;
+    }
+
+    public function setCsvStatus($csv_status) {
+        $this->csv_status = $csv_status;
 
         return $this;
     }

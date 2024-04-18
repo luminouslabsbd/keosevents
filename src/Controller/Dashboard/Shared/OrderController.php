@@ -701,7 +701,7 @@ class OrderController extends Controller {
             return $this->redirect($request->headers->get('referer'));
         }
 
-        $link = $_ENV['MAIN_DOMAIN'].'/dashboard/attendee/join_event_meeting/'.$one_event['reference'];
+        $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
 
         $pdfOptions = new Options();
         $pdfOptions->set('defaultFont', 'Arial');
