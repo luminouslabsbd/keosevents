@@ -111,9 +111,9 @@ class User extends BaseUser implements UserInterface {
      */
     protected $slug;
     
-    /**
-     * @ORM\Column(type="integer", length=11, options={"default": 0})
-     */
+    // /**
+    //  * @ORM\Column(type="integer", length=11, options={"default": 0})
+    //  */
 
     // private $csv_status;
 
