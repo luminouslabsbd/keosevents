@@ -115,7 +115,7 @@ class User extends BaseUser implements UserInterface {
      * @ORM\Column(type="integer", length=11, options={"default": 0})
      */
 
-    private $csv_status;
+    // private $csv_status;
 
 
      /**
@@ -484,15 +484,15 @@ class User extends BaseUser implements UserInterface {
         return $this;
     }
 
-    public function getCsvStatus() {
-        return $this->csv_status;
-    }
+    // public function getCsvStatus() {
+    //     return $this->csv_status;
+    // }
 
-    public function setCsvStatus($csv_status) {
-        $this->csv_status = $csv_status;
+    // public function setCsvStatus($csv_status) {
+    //     $this->csv_status = $csv_status;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getPhone() {
         return $this->phone;
