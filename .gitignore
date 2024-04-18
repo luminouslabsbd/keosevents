@@ -3,8 +3,13 @@
 /.env.local
 /.env.local.php
 /.env.*.local
+
 /public/bundles/
-/public/uploads/
+/public/uploads
+/public/assets/
+/public/google_credential
+/public/media/cache/
+
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
@@ -20,14 +25,11 @@
 
 ###> symfony/webpack-encore-bundle ###
 /node_modules/
-/public/assets/
-/public/google_credential
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
 
 ###> liip/imagine-bundle ###
-/public/media/cache/
 ###< liip/imagine-bundle ###
 
 ###> netbeans project ###
