@@ -23,6 +23,7 @@ use Dompdf\Options;
 use Symfony\Component\HttpFoundation\Response;
 use App\Entity\OrderElement;
 use FOS\UserBundle\Model\UserManagerInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 
 class TicketController extends Controller
@@ -219,6 +220,7 @@ class TicketController extends Controller
             'eventDateTicketReference' => $eventDateTicketReference,
             'link' => $link,
         ]);
+        // return  $this->render('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $orders]);
 
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
@@ -327,8 +329,6 @@ class TicketController extends Controller
         $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneByReference($ticketreference);
 
         // For Create User As a attendee
-
-
 
         foreach ($eventMails as $eventMail) {
             if ($eventMail['status'] == 0) {
@@ -473,7 +473,6 @@ class TicketController extends Controller
 
 
                 //exit;
-                // dd($order->getReference());
                 //  $order = $services->getOrders(array("reference" => $reference))->getQuery()->getOneOrNullResult();
 
                 // $link = $_ENV['MAIN_DOMAIN'].'join_event_meeting/'.$one_event['reference'];
@@ -491,7 +490,6 @@ class TicketController extends Controller
                 //  foreach($data as $a) {
                 //      dump($a,$a->gettickets());
                 //  }
-                //  dd("ok");
 
                 //  return $this->render('Dashboard/Shared/Order/ticket-pdf.html.twig', [
                 //             'order' => $order,
@@ -532,7 +530,6 @@ class TicketController extends Controller
                 //     $this->addFlash('danger', $translator->trans("The email could not be sent"));
                 // }
 
-                //   dd("ojk");
                 // Update the status
                 // $sqlUpdate = "UPDATE event_mails SET status = 1 WHERE id = :mailId";
                 // $paramsUpdate = ['mailId' => $eventMail['id']];
@@ -658,8 +655,22 @@ class TicketController extends Controller
     }
 
 
-    public function csv_users_list($event_ref){
-        dd($event_ref);
+    public function csv_users_list($event_ref, EntityManagerInterface $entityManager){
+
+        $sql = "SELECT * FROM event_invalid_mails  WHERE event_ref_id = :event_ref_id";
+        $statement = $entityManager->getConnection()->prepare($sql);
+        $statement->execute(['event_ref_id' => $event_ref]);
+        $event_invalid_mails = $statement->fetchAll();
+
+        $sql2 = "SELECT * FROM event_mails  WHERE event_ref_id = :event_ref_id";
+        $statement2 = $entityManager->getConnection()->prepare($sql2);
+        $statement2->execute(['event_ref_id' => $event_ref]);
+        $event_valid_mails = $statement2->fetchAll();
+
+        return $this->render('Dashboard/Shared/SendTicket/csv_users_list.html.twig', array(
+            "event_invalid_mails" => $event_invalid_mails,
+            "event_valid_mails"   => $event_valid_mails,
+        ));
     }
 
 
