@@ -220,7 +220,6 @@ class TicketController extends Controller
             'eventDateTicketReference' => $eventDateTicketReference,
             'link' => $link,
         ]);
-        
         // return  $this->render('Dashboard/Shared/Order/confirmation-email.html.twig', ['order' => $orders]);
 
         $dompdf->loadHtml($html);
@@ -228,7 +227,6 @@ class TicketController extends Controller
         $dompdf->render();
         $ticketsPdfFile = $dompdf->output();
         $emailTo = $user['email'];
-        $emailTo = "shohag.offc@gmail.com";
         $email_subject_title = $user['firstname'] . ' ' . $user['lastname'] . ', we are waiting for you at ' . $orders->getOrderelements()[0]->getEventticket()->getEventdate()->getEvent()->getName();
         $email = (new \Swift_Message($email_subject_title))
             ->setFrom($services->getSetting('no_reply_email'))
@@ -335,8 +333,6 @@ class TicketController extends Controller
         $eventticket = $em->getRepository("App\Entity\EventTicket")->findOneByReference($ticketreference);
 
         // For Create User As a attendee
-
-
 
         foreach ($eventMails as $eventMail) {
             if ($eventMail['status'] == 0) {
