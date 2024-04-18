@@ -41,7 +41,6 @@ class EventController extends Controller
         }
 
         $events = $paginator->paginate($services->getEvents(array("slug" => $slug, "category" => $category, "venue" => $venue, "elapsed" => $elapsed, "published" => $published, "organizer" => $organizer, "sort" => "startdate", "organizerEnabled" => "all", "sort" => "e.createdAt", "order" => "DESC"))->getQuery(), $request->query->getInt('page', 1), 10, array('wrap-queries' => true));
-
         return $this->render('Dashboard/Shared/Event/index.html.twig', [
             'events' => $events,
         ]);
