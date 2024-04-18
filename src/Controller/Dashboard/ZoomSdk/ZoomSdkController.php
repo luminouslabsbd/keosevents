@@ -7,29 +7,45 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class ZoomSdkController extends Controller
 {
+
+  private $tokenManager;
+
+  public function __construct(CsrfTokenManagerInterface $tokenManager = null)
+  {
+    $this->tokenManager = $tokenManager;
+  }
+
   public function zoomSdkPlayer(Request $request, Connection $connection , TranslatorInterface $translator, $reference)
 
   {
-//     $ud = $request->query->get('ud') ?? null;
-
-//     if($ud != null){
-
-//       $sql3 = "SELECT slug, email, firstname, lastname FROM eventic_user WHERE slug = :slug";
-//         $params3 = ['slug' => $ud];
-//         $statement3 = $connection->prepare($sql3);
-//         $statement3->execute($params3);
-//         $user = $statement3->fetch();
-// dd($user);
-
-//       return $this->render('Front/Luminous/set_password.html.twig',[
-//         'user' => $user,
-//       ]);
-//     }
-
     $ErrorBackUrl = $_ENV['MAIN_DOMAIN'].'en/dashboard/attendee/my-tickets';
+
+    $ud = $request->query->get('ud') ?? null;
+
+    if($ud != null){
+
+      $sql3 = "SELECT slug, email, firstname, lastname FROM eventic_user WHERE slug = :slug";
+        $params3 = ['slug' => $ud];
+        $statement3 = $connection->prepare($sql3);
+        $statement3->execute($params3);
+        $user = $statement3->fetch();
+
+        if($user == null){
+          $this->addFlash('error', $translator->trans('Invalid Link!!!'));
+          return new RedirectResponse($ErrorBackUrl);
+        }
+
+        $csrfToken = $this->tokenManager ? $this->tokenManager->getToken('authenticate')->getValue() : null;
+
+      return $this->render('Front/Luminous/set_password.html.twig',[
+        'user' => $user,
+        'csrf_token' => $csrfToken
+      ]);
+    }
 
     $sqlEvent = "SELECT * FROM eventic_event WHERE reference = :reference";
     $paramsEvent = ['reference' => $reference];
